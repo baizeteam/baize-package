@@ -1,4 +1,4 @@
-import { defineConfig, UserConfig } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import viteReactStyleName from "./lib/main";
 import genericNames from "generic-names";
@@ -10,20 +10,7 @@ const alias = {
   "@": resolve(__dirname, "src"),
 };
 
-const proConfig: UserConfig = {
-  build: {
-    rollupOptions: {
-      external: ["@babel/core", "babel-plugin-react-css-modules", "babel-plugin-module-resolver"],
-    },
-    lib: {
-      entry: "./lib/main.ts",
-      name: "index",
-      fileName: "index",
-    },
-  },
-};
-
-const devConfig: UserConfig = {
+export default defineConfig({
   plugins: [
     react(),
     viteReactStyleName({
@@ -44,8 +31,14 @@ const devConfig: UserConfig = {
   resolve: {
     alias,
   },
-};
-
-console.log(process.env.NODE_ENV === "production");
-
-export default defineConfig(process.env.NODE_ENV === "production" ? proConfig : devConfig);
+  build: {
+    rollupOptions: {
+      external: ["@babel/core", "babel-plugin-react-css-modules", "babel-plugin-module-resolver"],
+    },
+    lib: {
+      entry: "./lib/main.ts",
+      name: "index",
+      fileName: "index",
+    },
+  },
+});

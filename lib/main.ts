@@ -20,7 +20,6 @@ function viteReactStyleName(opt) {
       if (!id.endsWith("x") && !code.includes("react")) {
         return null;
       }
-
       const parserPlugins = ["jsx", "importMeta"];
       if (/\.tsx?$/.test(id)) {
         parserPlugins.push("typescript", "decorators-legacy");
