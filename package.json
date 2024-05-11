@@ -2,6 +2,10 @@
   "name": "@baizeteam/vite-react-stylename",
   "private": true,
   "version": "0.0.1",
+  "keywords": ["styleName", "css-modules", "vite", "react", "less"],
+  "description": "A plugin for vite to support react styleName and css-modules",
+  "repository": "https://github.com/baizeteam/vite-react-stylename.git",
+  "author": "baizeteam",
   "type": "module",
   "files": [
     "lib",
