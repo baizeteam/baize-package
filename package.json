@@ -1,9 +1,20 @@
 {
   "name": "@baizeteam/vite-react-stylename",
   "version": "0.0.1",
-  "keywords": ["styleName", "css-modules", "vite", "react", "less"],
+  "keywords": [
+    "styleName",
+    "css-modules",
+    "react-css-modules",
+    "vite-react-stylename",
+    "babel-plugin-react-css-modules",
+    "vite-plugin-react-css-module"
+  ],
   "description": "A plugin for vite to support react styleName and css-modules",
-  "repository": "https://github.com/baizeteam/vite-react-stylename.git",
+  "repository":{
+    "type": "git",
+    "url": "git+https://github.com/baizeteam/vite-react-stylename.git"
+  },
+  "homepage": "https://github.com/baizeteam/vite-react-stylename/tree/master#readme",
   "author": "baizeteam",
   "type": "module",
   "files": [
