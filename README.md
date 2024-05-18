@@ -31,9 +31,6 @@ import { resolve } from "path";
 
 const generateScopedName = genericNames("[name]__[local]__[hash:base64:4]");
 
-const alias = {
-  "@": resolve(__dirname, "src"),
-};
 
 export default defineConfig({
   plugins: [
@@ -44,18 +41,14 @@ export default defineConfig({
         ".less": {
           syntax: "postcss-less",
         },
-      },
-      alias,
+      }
     }),
   ],
   css: {
     modules: {
       generateScopedName: generateScopedName,
     },
-  },
-  resolve: {
-    alias,
-  },
+  }
 });
 ```
 

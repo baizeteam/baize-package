@@ -6,10 +6,6 @@ import { resolve } from "path";
 
 const generateScopedName = genericNames("[name]__[local]__[hash:base64:4]");
 
-const alias = {
-  "@": resolve(__dirname, "src"),
-};
-
 export default defineConfig({
   plugins: [
     react(),
@@ -20,7 +16,6 @@ export default defineConfig({
           syntax: "postcss-less",
         },
       },
-      alias,
     }),
   ],
   css: {
@@ -29,7 +24,9 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias,
+    alias: {
+      "@": resolve(__dirname, "src"),
+    },
   },
   build: {
     rollupOptions: {

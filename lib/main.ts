@@ -9,10 +9,14 @@ enum EEnforce {
 }
 
 function viteReactStyleName(opt) {
-  const { alias, ...options } = opt;
+  const { ...options } = opt;
+  let _alias;
   return {
     name: "vite-react-stylename",
     enforce: EEnforce.PRE,
+    config(confing) {
+      _alias = confing.resolve.alias;
+    },
     transform(code, id) {
       if (!/\.(t|j)sx?$/.test(id) || id.includes("node_modules")) {
         return null;
@@ -38,7 +42,7 @@ function viteReactStyleName(opt) {
           [
             babelPluginModuleResolver,
             {
-              alias,
+              alias: _alias,
               extensions: [".js", ".jsx", ".tsx", ".ts"],
             },
           ],
