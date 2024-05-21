@@ -24,7 +24,7 @@ const separators = {
 const npmProObj = {
   react: "umd/react.production.min.js",
   "react-dom": "umd/react-dom.production.min.js",
-  "react-router-dom": "react-router-dom.production.min.js",
+  "react-router-dom": "dist/react-router-dom.production.min.js",
   mobx: "dist/mobx.umd.production.min.js",
   "mobx-react": "/dist/mobxreact.umd.production.min.js",
   vue: "/dist/vue.global.prod.js",
