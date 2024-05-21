@@ -1,0 +1,49 @@
+{
+  "name": "vite-add-cdn-script",
+  "version": "0.0.1",
+  "keywords": [
+    "vite",
+    "cdn",
+    "cdn-script",
+    "auto-add-cdn",
+    "vite-add-cdn-script"
+  ],
+  "description": "A plugin for vite to add cdn script to index.html",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baizeteam/baize-vite-plugin.git"
+  },
+  "homepage": "https://github.com/baizeteam/baize-vite-plugin/tree/master/package/vite-add-cdn-script#readme",
+  "author": "baizeteam",
+  "type": "module",
+  "files": [
+    "dist",
+    "index.d.ts"
+  ],
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    "types": "./index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rollup-plugin-node-externals": "^7.1.2",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  }
+}
