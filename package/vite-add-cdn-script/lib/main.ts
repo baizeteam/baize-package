@@ -1,5 +1,5 @@
-import path from "node:path";
-import fs from "node:fs";
+import path from "path";
+import fs from "fs";
 import { PluginOption } from "vite";
 
 enum EEnforce {
@@ -108,7 +108,6 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       } catch (error) {
         console.error("获取dependencies出错:", error);
       }
-      console.log("transformIndexHtml", packageJsonPath);
     },
   };
 }

@@ -43,11 +43,10 @@ importers:
         version: 0.6.2(vite@5.2.11(@types/node@20.12.12)(less@4.2.0))
 
   package/vite-add-cdn-script:
-    dependencies:
+    devDependencies:
       '@types/node':
         specifier: ^20.12.11
         version: 20.12.12
-    devDependencies:
       '@types/react':
         specifier: ^18.3.2
         version: 18.3.2
@@ -63,6 +62,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      rollup-plugin-node-externals:
+        specifier: ^7.1.2
+        version: 7.1.2(rollup@4.17.2)
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -1002,6 +1004,12 @@ packages:
     resolution: {integrity: sha512-RXlupZrmn97AaaS5dWnktkjM+Iy+od0E+8L0mUkMIs3iuoUXNJebueQocQKV7Ircd54fSGGmkBaXwNzY05J1yQ==}
     peerDependencies:
       rollup: ^2.25.0 || ^3.3.0 || ^4.1.4
+
+  rollup-plugin-node-externals@7.1.2:
+    resolution: {integrity: sha512-cVJFKs+ulZxpMmn/s+oi431d93Jq5+G7Sc5ixWDrL2k+Gj+MqXg0KMNWgKf8Mw5qpaG4jVDpsvuqFfiCvRcGeA==}
+    engines: {node: '>= 21 || ^20.6.0 || ^18.19.0'}
+    peerDependencies:
+      rollup: ^3.0.0 || ^4.0.0
 
   rollup@4.17.2:
     resolution: {integrity: sha512-/9ClTJPByC0U4zNLowV1tMBe8yMEAxewtR3cUNX5BoEpGH3dQEWpJLr6CLp0fPdYRF/fzVOgvDb1zXuakwF5kQ==}
@@ -1984,6 +1992,10 @@ snapshots:
       estree-walker: 3.0.3
       is-reference: 3.0.2
       magic-string: 0.30.10
+      rollup: 4.17.2
+
+  rollup-plugin-node-externals@7.1.2(rollup@4.17.2):
+    dependencies:
       rollup: 4.17.2
 
   rollup@4.17.2:
