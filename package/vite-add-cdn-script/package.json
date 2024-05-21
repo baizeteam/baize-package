@@ -10,9 +10,9 @@
   "description": "A plugin for vite to add cdn script to index.html",
   "repository":{
     "type": "git",
-    "url": "git+https://github.com/baizeteam/vite-react-stylename.git"
+    "url": "git+https://github.com/baizeteam/baize-vite-plugin.git"
   },
-  "homepage": "https://github.com/baizeteam/vite-react-stylename/tree/master#readme",
+  "homepage": "https://github.com/baizeteam/baize-vite-plugin/tree/master/package/vite-add-cdn-script#readme",
   "author": "baizeteam",
   "type": "module",
   "files": [
