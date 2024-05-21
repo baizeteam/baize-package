@@ -44,16 +44,10 @@ importers:
 
   package/vite-add-cdn-script:
     dependencies:
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-    devDependencies:
       '@types/node':
         specifier: ^20.12.11
         version: 20.12.12
+    devDependencies:
       '@types/react':
         specifier: ^18.3.2
         version: 18.3.2
@@ -63,6 +57,12 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.2.1(vite@5.2.11(@types/node@20.12.12)(less@4.2.0))
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
       typescript:
         specifier: ^5.4.5
         version: 5.4.5

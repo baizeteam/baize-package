@@ -1,6 +1,5 @@
-// ts-check
-import { resolve } from "path";
-import { readFileSync } from "fs";
+import path from "node:path";
+import fs from "node:fs";
 import { PluginOption } from "vite";
 
 enum EEnforce {
@@ -39,14 +38,15 @@ const npmProObj = {
 interface IOptions {
   protocol?: string;
   customScript?: { [key: string]: string };
+  retryTimes?: number;
   defaultCdns?: string[];
 }
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
-  // const { ...options } = opt;
   const {
     protocol = "https",
     customScript = {},
+    retryTimes = 3,
     defaultCdns = ["bootcdn", "bytedance", "unpkg", "cdnjs", "jsdelivr", "staticfile"],
   } = opt;
   let _config;
@@ -58,29 +58,25 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       _config = confing;
     },
     transformIndexHtml(html) {
-      const packageJsonPath = resolve(process.cwd(), "package.json");
+      const packageJsonPath = path.resolve(process.cwd(), "package.json");
       try {
         const urlName = "bootcdn";
-        const packageJson = readFileSync(packageJsonPath, "utf-8");
+        const packageJson = fs.readFileSync(packageJsonPath, "utf-8");
         const packageData = JSON.parse(packageJson);
         const external = _config.build.rollupOptions.external;
         const errorScript = `<script>
   const separators = JSON.parse('${JSON.stringify(separators)}');
   const cdnUrlObj = JSON.parse('${JSON.stringify(cdnUrlObj)}');
   const defaultCdns = JSON.parse('${JSON.stringify(defaultCdns)}');
-  
   function errorCDN(e) {
     const nextCur = parseInt(e.getAttribute("data-cur")) + 1;
-    if(nextCur>=3){return;}
+    if(nextCur>=${retryTimes}){return;}
     const filename = e.getAttribute("data-filename");
     const key = e.getAttribute("data-key");
     const urlName = defaultCdns[nextCur]
-
-    console.log(urlName,cdnUrlObj[urlName], key, separators[urlName], filename);
-    
     // 组装新的cdn链接
     const url = location.protocol + "//" + cdnUrlObj[urlName] + "/" + key + separators[urlName] + filename;
-    console.log(url);
+    // 克隆原标签
     const tagName = e.tagName
     const cdnDOM = document.createElement(tagName);
     cdnDOM.setAttribute(tagName === 'SCRIPT' ?'src' : 'href', url);
