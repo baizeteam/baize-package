@@ -1,6 +1,6 @@
 # vite-add-cdn-script
 
-这是一个在vite.js中使用公共cdn的库，包括了"bootcdn", "bytedance", "unpkg", "cdnjs", "jsdelivr", "staticfile"等多个cdn资源，如加载失败会自动切换下一个cdn进行加载。
+这是一个在 vite.js 中使用公共 cdn 的库，包括了 unpkg, cdnjs, jsdelivr, staticfile 等多个 cdn 资源，如加载失败会自动切换下一个 cdn 进行加载。
 
 ## 开始
 
@@ -27,10 +27,7 @@ const externals = {
 };
 
 export default defineConfig({
-  plugins: [
-    react(),
-    viteAddCdnScript({}),
-  ],
+  plugins: [react(), viteAddCdnScript({})],
   build: {
     rollupOptions: {
       external: [...Object.keys(externals)],
@@ -40,9 +37,7 @@ export default defineConfig({
 });
 ```
 
-
-
-使用自定义的cdn
+使用自定义的 cdn
 
 ```typescript
 import { defineConfig } from "vite";
@@ -61,7 +56,8 @@ export default defineConfig({
     viteAddCdnScript({
       customScript: {
         react: "<script src='https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js'></script>",
-        "react-dom": "<script src='https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js'></script>",
+        "react-dom":
+          "<script src='https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js'></script>",
       },
     }),
   ],
@@ -73,37 +69,31 @@ export default defineConfig({
     },
   },
 });
-
 ```
-
-
 
 options
 
-| 参数         | 解析              | 类型                        | 默认值                                                       |
-| ------------ | ----------------- | --------------------------- | ------------------------------------------------------------ |
-| protocol     | 协议              | “http”\|“https”             | https                                                        |
-| customScript | 自定义cdn脚本     | { [*key*: string]: string } | 无                                                           |
-| retryTimes   | 重试次数          | number                      | 3                                                            |
-| defaultCdns  | 默认使用cdn的顺序 | string[]                    | ["bootcdn", "bytedance", "unpkg", "cdnjs", "jsdelivr", "staticfile"] |
-
-
+| 参数         | 解析                | 类型                        | 默认值                                                               |
+| ------------ | ------------------- | --------------------------- | -------------------------------------------------------------------- |
+| protocol     | 协议                | “http”\|“https”             | https                                                                |
+| customScript | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                                                                   |
+| retryTimes   | 重试次数            | number                      | 3                                                                    |
+| defaultCdns  | 默认使用 cdn 的顺序 | string[]                    | ["bootcdn", "bytedance", "unpkg", "cdnjs", "jsdelivr", "staticfile"] |
 
 ## 注意事项
 
-因为cdn对包管理的命名有很大的不同，默认是使用了xxx.min.js的文件，如果您使用的库的cdn文件不是这个的话，则需要配置为自定义的cdn。
+因为 cdn 对包管理的命名有很大的不同，默认是使用了 dist/xxx.min.js 的文件，如果您使用的库的 cdn 文件不是这个的话，则需要配置为自定义的 cdn。
 
-目前做了适配的非xxx.min.js适配的库如下，如果你有合适的cdn源或者，需要适配的库，欢迎提交issue或者pr！！！
+目前做了适配的非 xxx.min.js 适配的库如下，如果你有合适的 cdn 源或者，需要适配的库，欢迎提交 issue 或者 pr！！！
 
 ```
 {
   react: "umd/react.production.min.js",
   "react-dom": "umd/react-dom.production.min.js",
   "react-router-dom": "react-router-dom.production.min.js",
-  mobx: "mobx.umd.production.min.js",
-  "mobx-react": "mobxreact.umd.production.min.js",
-  vue: "vue.global.min.js",
-  "vue-router": "vue-router.global.prod.min.js",
+  mobx: "dist/mobx.umd.production.min.js",
+  "mobx-react": "/dist/mobxreact.umd.production.min.js",
+  vue: "/dist/vue.global.prod.js",
+  "vue-router": "/dist/vue-router.global.prod.js",
 }
 ```
-

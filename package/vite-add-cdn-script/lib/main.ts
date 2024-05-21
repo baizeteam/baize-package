@@ -9,30 +9,26 @@ enum EEnforce {
 
 const cdnUrlObj = {
   unpkg: "unpkg.com",
-  bytedance: "lf26-cdn-tos.bytecdntp.com/cdn",
   staticfile: "cdn.staticfile.net",
   cdnjs: "cdnjs.cloudflare.com/ajax/libs",
   jsdelivr: "cdn.jsdelivr.net/npm",
-  bootcdn: "cdn.bootcdn.net/ajax/libs",
 };
 
 const separators = {
   unpkg: "@",
-  bytedance: "/",
   staticfile: "/",
   cdnjs: "/",
   jsdelivr: "@",
-  bootcdn: "/",
 };
 
 const npmProObj = {
   react: "umd/react.production.min.js",
   "react-dom": "umd/react-dom.production.min.js",
   "react-router-dom": "react-router-dom.production.min.js",
-  mobx: "mobx.umd.production.min.js",
-  "mobx-react": "mobxreact.umd.production.min.js",
-  vue: "vue.global.min.js",
-  "vue-router": "vue-router.global.prod.min.js",
+  mobx: "dist/mobx.umd.production.min.js",
+  "mobx-react": "/dist/mobxreact.umd.production.min.js",
+  vue: "/dist/vue.global.prod.js",
+  "vue-router": "/dist/vue-router.global.prod.js",
 };
 
 export interface IOptions {
@@ -47,7 +43,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
     protocol = "https",
     customScript = {},
     retryTimes = 3,
-    defaultCdns = ["bootcdn", "bytedance", "unpkg", "cdnjs", "jsdelivr", "staticfile"],
+    defaultCdns = ["unpkg", "cdnjs", "jsdelivr", "staticfile"],
   } = opt;
   let _config;
   return {
@@ -60,7 +56,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
     transformIndexHtml(html) {
       const packageJsonPath = path.resolve(process.cwd(), "package.json");
       try {
-        const urlName = "bootcdn";
+        const urlName = defaultCdns[0];
         const packageJson = fs.readFileSync(packageJsonPath, "utf-8");
         const packageData = JSON.parse(packageJson);
         const external = _config.build.rollupOptions.external;
@@ -97,7 +93,8 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
               script += customScript[key];
             } else {
               const version = packageData.dependencies[key];
-              const fileName = version.replace("^", "") + "/" + (npmProObj[key] ? npmProObj[key] : `${key}.min.js`);
+              const fileName =
+                version.replace("^", "") + "/" + (npmProObj[key] ? npmProObj[key] : `dist/${key}.min.js`);
               const url = `${protocol}://${cdnUrlObj[urlName]}/${key}${separators[urlName]}${fileName}`;
               script += `<script src="${url}" type="text/javascript" onerror="errorCDN(this)" data-cur="0" data-key="${key}" data-filename="${fileName}"></script>\n`;
             }
