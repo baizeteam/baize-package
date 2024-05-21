@@ -1,87 +1,109 @@
-# vite-react-stylename
+# vite-add-cdn-script
 
-A vitejs plugin to use [babel-plugin-react-css-modules](https://www.npmjs.com/package/babel-plugin-react-css-modules)
+这是一个在vite.js中使用公共cdn的库，包括了"bootcdn", "bytedance", "unpkg", "cdnjs", "jsdelivr", "staticfile"等多个cdn资源，如加载失败会自动切换下一个cdn进行加载。
 
-This project was modified based on the `vite-plugin-react-css-module`. Due to the lack of adaptation to `alias` in the source project and a long absence of updates, a new project was opened using vite's lib mode.
+## 开始
 
-## getting start
-
-### Installation
+### 安装
 
 ```
-pnpm install vite-react-stylename
+pnpm install vite-add-cdn-script rollup-plugin-external-globals -D
 ```
 
-other devDependencies
+### 使用
 
-```
-pnpm install less postcss-less generic-names @types/react-css-modules @types/node -D
-```
-
-### usage
-
-vite
+vite.config.ts
 
 ```typescript
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import viteReactStyleName from "vite-react-stylename";
-import genericNames from "generic-names";
-import { resolve } from "path";
+import viteAddCdnScript from "../vite-add-cdn-script/lib/main";
+import externalGlobals from "rollup-plugin-external-globals";
 
-const generateScopedName = genericNames("[name]__[local]__[hash:base64:4]");
-
+// 需要使用cdn库
+const externals = {
+  react: "React",
+  "react-dom": "ReactDOM",
+};
 
 export default defineConfig({
   plugins: [
     react(),
-    viteReactStyleName({
-      generateScopedName,
-      filetypes: {
-        ".less": {
-          syntax: "postcss-less",
-        },
-      }
-    }),
+    viteAddCdnScript({}),
   ],
-  css: {
-    modules: {
-      generateScopedName: generateScopedName,
+  build: {
+    rollupOptions: {
+      external: [...Object.keys(externals)],
+      plugins: [externalGlobals(externals)],
     },
-  }
+  },
 });
 ```
 
-In React, you can use `xxx.module.less` + `stylename` to enable the ` CSS module`.
+
+
+使用自定义的cdn
 
 ```typescript
-import ReactDOM from "react-dom/client";
-import "./index.module.less";
-import "@/assets/index.less";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import viteAddCdnScript from "../vite-add-cdn-script/lib/main";
+import externalGlobals from "rollup-plugin-external-globals";
 
-function App() {
-  return <div styleName="app-container">Hello vite-react-stylename!</div>;
-}
+const externals = {
+  react: "React",
+  "react-dom": "ReactDOM",
+};
 
-ReactDOM.createRoot(document.getElementById("app")!).render(<App />);
+export default defineConfig({
+  plugins: [
+    react(),
+    viteAddCdnScript({
+      customScript: {
+        react: "<script src='https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js'></script>",
+        "react-dom": "<script src='https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js'></script>",
+      },
+    }),
+  ],
+  base: "./",
+  build: {
+    rollupOptions: {
+      external: [...Object.keys(externals)],
+      plugins: [externalGlobals(externals)],
+    },
+  },
+});
+
 ```
 
-### options
 
-you can use all the options exclude `webpackHotModuleReloading` of babel-plugin-react-css-modules.
 
-| Name                         | Type                                   | Description                                                                                                                                                                                                                                                                                                                                                                        | Default                                      |
-| ---------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `context`                    | `string`                               | Must match webpack [`context`](https://webpack.js.org/configuration/entry-context/#context) configuration. [`css-loader`](https://github.com/webpack/css-loader) inherits `context` values from webpack. Other CSS module implementations might use different context resolution logic.                                                                                            | `process.cwd()`                              |
-| `exclude`                    | `string`                               | A RegExp that will exclude otherwise included files e.g., to exclude all styles from node_modules `exclude: 'node_modules'`                                                                                                                                                                                                                                                        |                                              |
-| `filetypes`                  | `?FiletypesConfigurationType`          | Configure [postcss syntax loaders](https://github.com/postcss/postcss#syntaxes) like sugarss, LESS and SCSS and extra plugins for them.                                                                                                                                                                                                                                            |                                              |
-| `generateScopedName`         | `?GenerateScopedNameConfigurationType` | Refer to [Generating scoped names](https://github.com/css-modules/postcss-modules#generating-scoped-names). If you use this option, make sure it matches the value of `localIdentName` [in webpack config](https://webpack.js.org/loaders/css-loader/#localidentname). See this [issue](https://github.com/gajus/babel-plugin-react-css-modules/issues/108#issuecomment-334351241) | `[path]___[name]__[local]___[hash:base64:5]` |
-| `removeImport`               | `boolean`                              | Remove the matching style import. This option is used to enable server-side rendering.                                                                                                                                                                                                                                                                                             | `false`                                      |
-| `handleMissingStyleName`     | `"throw"`, `"warn"`, `"ignore"`        | Determines what should be done for undefined CSS modules (using a `styleName` for which there is no CSS module defined). Setting this option to `"ignore"` is equivalent to setting `errorWhenNotFound: false` in [react-css-modules](https://github.com/gajus/react-css-modules#errorwhennotfound).                                                                               | `"throw"`                                    |
-| `attributeNames`             | `?AttributeNameMapType`                | Refer to [Custom Attribute Mapping](https://github.com/fchengjin/vite-plugin-react-css-module/blob/main/readme.md#custom-attribute-mapping)                                                                                                                                                                                                                                        | `{"styleName": "className"}`                 |
-| `skip`                       | `boolean`                              | Whether to apply plugin if no matching `attributeNames` found in the file                                                                                                                                                                                                                                                                                                          | `false`                                      |
-| `autoResolveMultipleImports` | `boolean`                              | Allow multiple anonymous imports if `styleName` is only in one of them.                                                                                                                                                                                                                                                                                                            | `false`                                      |
+options
 
-### Special Thanks
+| 参数         | 解析              | 类型                        | 默认值                                                       |
+| ------------ | ----------------- | --------------------------- | ------------------------------------------------------------ |
+| protocol     | 协议              | “http”\|“https”             | https                                                        |
+| customScript | 自定义cdn脚本     | { [*key*: string]: string } | 无                                                           |
+| retryTimes   | 重试次数          | number                      | 3                                                            |
+| defaultCdns  | 默认使用cdn的顺序 | string[]                    | ["bootcdn", "bytedance", "unpkg", "cdnjs", "jsdelivr", "staticfile"] |
 
-https://github.com/fchengjin/vite-plugin-react-css-module
+
+
+## 注意事项
+
+因为cdn对包管理的命名有很大的不同，默认是使用了xxx.min.js的文件，如果您使用的库的cdn文件不是这个的话，则需要配置为自定义的cdn。
+
+目前做了适配的非xxx.min.js适配的库如下，如果你有合适的cdn源或者，需要适配的库，欢迎提交issue或者pr！！！
+
+```
+{
+  react: "umd/react.production.min.js",
+  "react-dom": "umd/react-dom.production.min.js",
+  "react-router-dom": "react-router-dom.production.min.js",
+  mobx: "mobx.umd.production.min.js",
+  "mobx-react": "mobxreact.umd.production.min.js",
+  vue: "vue.global.min.js",
+  "vue-router": "vue-router.global.prod.min.js",
+}
+```
+
