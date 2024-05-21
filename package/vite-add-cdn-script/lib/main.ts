@@ -35,7 +35,7 @@ const npmProObj = {
   "vue-router": "vue-router.global.prod.min.js",
 };
 
-interface IOptions {
+export interface IOptions {
   protocol?: string;
   customScript?: { [key: string]: string };
   retryTimes?: number;
