@@ -1,6 +1,6 @@
 # vite-add-cdn-script
 
-这是一个在 vite.js 中使用公共 cdn 的库，包括了 unpkg, cdnjs, jsdelivr, staticfile 等多个 cdn 资源，如加载失败会自动切换下一个 cdn 进行加载。
+这是一个在 vite.js 中使用公共 cdn 的库，包括了 unpkg, jsdelivr 等多个 cdn 资源，如加载失败会自动切换下一个 cdn 进行加载。
 
 ## 开始
 
