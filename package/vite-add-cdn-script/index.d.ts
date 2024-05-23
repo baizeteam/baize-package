@@ -1,6 +1,7 @@
 interface IOptions {
   protocol?: string;
   customScript?: { [key: string]: string };
+  customFilepath?: { [key: string]: string };
   retryTimes?: number;
   defaultCdns?: string[];
 }

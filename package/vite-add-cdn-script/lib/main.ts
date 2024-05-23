@@ -8,32 +8,39 @@ enum EEnforce {
 }
 
 const cdnUrlObj = {
-  unpkg: "unpkg.com",
-  staticfile: "cdn.staticfile.net",
-  cdnjs: "cdnjs.cloudflare.com/ajax/libs",
   jsdelivr: "cdn.jsdelivr.net/npm",
+  unpkg: "unpkg.com",
 };
 
 const separators = {
-  unpkg: "@",
-  staticfile: "/",
-  cdnjs: "/",
   jsdelivr: "@",
+  unpkg: "@",
 };
 
-const npmProObj = {
+export const npmProObj = {
+  // react
   react: "umd/react.production.min.js",
   "react-dom": "umd/react-dom.production.min.js",
-  "react-router-dom": "dist/react-router-dom.production.min.js",
+  "@remix-run/router": "dist/router.umd.min.js",
+  "react-router": "dist/umd/react-router.production.min.js",
+  "react-router-dom": "dist/umd/react-router-dom.production.min.js",
   mobx: "dist/mobx.umd.production.min.js",
-  "mobx-react": "/dist/mobxreact.umd.production.min.js",
-  vue: "/dist/vue.global.prod.js",
-  "vue-router": "/dist/vue-router.global.prod.js",
+  "mobx-react": "dist/mobxreact.umd.production.min.js",
+
+  // vue
+  vue: "dist/vue.global.min.js",
+  "vue-router": "dist/vue-router.global.min.js",
+
+  // tool
+  dayjs: "dayjs.min.js",
+  moment: "moment.min.js",
+  lodash: "lodash.min.js",
 };
 
 export interface IOptions {
   protocol?: string;
   customScript?: { [key: string]: string };
+  customFilepath?: { [key: string]: string };
   retryTimes?: number;
   defaultCdns?: string[];
 }
@@ -42,10 +49,12 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
   const {
     protocol = "https",
     customScript = {},
-    retryTimes = 3,
-    defaultCdns = ["unpkg", "cdnjs", "jsdelivr", "staticfile"],
+    retryTimes = 1,
+    defaultCdns = ["jsdelivr", "unpkg"],
+    customFilepath = {},
   } = opt;
   let _config;
+  const _npmProObj = { ...npmProObj, ...customFilepath };
   return {
     name: "vite-add-cdn-script",
     enforce: EEnforce.PRE,
@@ -87,17 +96,16 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
 </script>`;
 
         let script = "" + errorScript;
-        Object.keys(packageData.dependencies).forEach((key) => {
-          if (external.includes(key)) {
-            if (customScript[key]) {
-              script += customScript[key];
-            } else {
-              const version = packageData.dependencies[key];
-              const fileName =
-                version.replace("^", "") + "/" + (npmProObj[key] ? npmProObj[key] : `dist/${key}.min.js`);
-              const url = `${protocol}://${cdnUrlObj[urlName]}/${key}${separators[urlName]}${fileName}`;
-              script += `<script src="${url}" type="text/javascript" onerror="errorCDN(this)" data-cur="0" data-key="${key}" data-filename="${fileName}"></script>\n`;
-            }
+        external.forEach((key) => {
+          if (customScript[key]) {
+            script += customScript[key];
+          } else {
+            const version = packageData.dependencies[key]
+              ? separators[urlName] + packageData.dependencies[key].replace("^", "")
+              : "";
+            const fileName = version + "/" + (_npmProObj[key] ? _npmProObj[key] : `dist/${key}.min.js`);
+            const url = `${protocol}://${cdnUrlObj[urlName]}/${key}${fileName}`;
+            script += `<script src="${url}" type="text/javascript" onerror="errorCDN(this)" data-cur="0" data-key="${key}" data-filename="${fileName}"></script>\n`;
           }
         });
         html = html.replace("</head>", `${script}</head>`);
