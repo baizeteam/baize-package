@@ -17,13 +17,16 @@ vite.config.ts
 ```typescript
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import viteAddCdnScript from "../vite-add-cdn-script/lib/main";
+import viteAddCdnScript from "vite-add-cdn-script";
 import externalGlobals from "rollup-plugin-external-globals";
 
-// 需要使用cdn库
+// 需要使用cdn库，按顺序添加，如react-router-dom需要依赖react、@remix-run/router、react-router，因此需要放在最后
 const externals = {
   react: "React",
   "react-dom": "ReactDOM",
+  "@remix-run/router": "@remix-run/router",
+  "react-router": "react-router",
+  "react-router-dom": "ReactRouterDOM",
 };
 
 export default defineConfig({
@@ -45,6 +48,7 @@ import react from "@vitejs/plugin-react";
 import viteAddCdnScript from "../vite-add-cdn-script/lib/main";
 import externalGlobals from "rollup-plugin-external-globals";
 
+// 需要使用cdn的模块，会按顺序插入脚本，如
 const externals = {
   react: "React",
   "react-dom": "ReactDOM",
@@ -73,12 +77,24 @@ export default defineConfig({
 
 options
 
-| 参数         | 解析                | 类型                        | 默认值                                                               |
-| ------------ | ------------------- | --------------------------- | -------------------------------------------------------------------- |
-| protocol     | 协议                | “http”\|“https”             | https                                                                |
-| customScript | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                                                                   |
-| retryTimes   | 重试次数            | number                      | 3                                                                    |
-| defaultCdns  | 默认使用 cdn 的顺序 | string[]                    | ["bootcdn", "bytedance", "unpkg", "cdnjs", "jsdelivr", "staticfile"] |
+| 参数         | 解析                | 类型                        | 默认值                |
+| ------------ | ------------------- | --------------------------- | --------------------- |
+| protocol     | 协议                | “http”\|“https”             | https                 |
+| customScript | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                    |
+| custom       | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                    |
+| retryTimes   | 重试次数            | number                      | 3                     |
+| defaultCdns  | 默认使用 cdn 的顺序 | string[]                    | ["jsdelivr", "unpkg"] |
+
+
+
+## 代办
+
+- [ ] 适配vue相关基础库
+- [ ] 适配常用的工具类
+- [ ] 兼容bootcdn
+- [ ] 兼容cdnjs
+
+
 
 ## 注意事项
 
@@ -88,12 +104,24 @@ options
 
 ```
 {
+  // react
   react: "umd/react.production.min.js",
   "react-dom": "umd/react-dom.production.min.js",
-  "react-router-dom": "react-router-dom.production.min.js",
+  "@remix-run/router": "dist/router.umd.min.js",
+  "react-router": "dist/umd/react-router.production.min.js",
+  "react-router-dom": "dist/umd/react-router-dom.production.min.js",
   mobx: "dist/mobx.umd.production.min.js",
-  "mobx-react": "/dist/mobxreact.umd.production.min.js",
-  vue: "/dist/vue.global.prod.js",
-  "vue-router": "/dist/vue-router.global.prod.js",
+  "mobx-react": "dist/mobxreact.umd.production.min.js",
+
+  // vue
+  vue: "dist/vue.global.prod.min.js",
+  "vue-router": "dist/vue-router.global.prod.min.js",
+  "vue-demi": "lib/index.iife.min.js",
+  pinia: "dist/pinia.iife.min.js",
+
+  // tool
+  dayjs: "dayjs.min.js",
+  moment: "moment.min.js",
+  lodash: "lodash.min.js",
 }
 ```

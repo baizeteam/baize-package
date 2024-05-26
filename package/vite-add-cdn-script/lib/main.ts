@@ -28,8 +28,10 @@ export const npmProObj = {
   "mobx-react": "dist/mobxreact.umd.production.min.js",
 
   // vue
-  vue: "dist/vue.global.min.js",
-  "vue-router": "dist/vue-router.global.min.js",
+  vue: "dist/vue.global.prod.min.js",
+  "vue-router": "dist/vue-router.global.prod.min.js",
+  "vue-demi": "lib/index.iife.min.js",
+  pinia: "dist/pinia.iife.min.js",
 
   // tool
   dayjs: "dayjs.min.js",
@@ -105,7 +107,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
               : "";
             const fileName = version + "/" + (_npmProObj[key] ? _npmProObj[key] : `dist/${key}.min.js`);
             const url = `${protocol}://${cdnUrlObj[urlName]}/${key}${fileName}`;
-            script += `<script src="${url}" type="text/javascript" onerror="errorCDN(this)" data-cur="0" data-key="${key}" data-filename="${fileName}"></script>\n`;
+            script += `<script src="${url}" type="text/javascript" crossorigin="anonymous" onerror="errorCDN(this)" data-cur="0" data-key="${key}" data-filename="${fileName}"></script>\n`;
           }
         });
         html = html.replace("</head>", `${script}</head>`);

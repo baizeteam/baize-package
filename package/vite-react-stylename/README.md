@@ -82,6 +82,15 @@ you can use all the options exclude `webpackHotModuleReloading` of babel-plugin-
 | `skip`                       | `boolean`                              | Whether to apply plugin if no matching `attributeNames` found in the file                                                                                                                                                                                                                                                                                                          | `false`                                      |
 | `autoResolveMultipleImports` | `boolean`                              | Allow multiple anonymous imports if `styleName` is only in one of them.                                                                                                                                                                                                                                                                                                            | `false`                                      |
 
+
+
+### Todo
+
+- [x] use alias
+- [ ] Adapt to versions of vite 5.0.12 and above
+
+
+
 ### Special Thanks
 
 https://github.com/fchengjin/vite-plugin-react-css-module
