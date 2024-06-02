@@ -15,7 +15,7 @@ pnpm install vite-react-stylename
 other devDependencies
 
 ```
-pnpm install less postcss-less generic-names @types/react-css-modules @types/node -D
+pnpm install less postcss-less generic-names @types/react-css-modules -D
 ```
 
 ### usage
