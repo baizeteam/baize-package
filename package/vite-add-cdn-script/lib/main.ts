@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { PluginOption } from "vite";
+import { getPackageVersion } from "./utils";
 
 enum EEnforce {
   PRE = "pre",
@@ -21,16 +22,6 @@ const separators = {
   jsdelivr: "@",
 };
 
-const npmProObj = {
-  react: "umd/react.production.min.js",
-  "react-dom": "umd/react-dom.production.min.js",
-  "react-router-dom": "react-router-dom.production.min.js",
-  mobx: "dist/mobx.umd.production.min.js",
-  "mobx-react": "/dist/mobxreact.umd.production.min.js",
-  vue: "/dist/vue.global.prod.js",
-  "vue-router": "/dist/vue-router.global.prod.js",
-};
-
 export interface IOptions {
   protocol?: string;
   customScript?: { [key: string]: string };
@@ -46,6 +37,8 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
     defaultCdns = ["unpkg", "cdnjs", "jsdelivr", "staticfile"],
   } = opt;
   let _config;
+  const _npmProObj = { ...customScript };
+
   return {
     name: "vite-add-cdn-script",
     enforce: EEnforce.PRE,
@@ -87,20 +80,18 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
 </script>`;
 
         let script = "" + errorScript;
-        Object.keys(packageData.dependencies).forEach((key) => {
-          if (external.includes(key)) {
-            if (customScript[key]) {
-              script += customScript[key];
-            } else {
-              const version = packageData.dependencies[key];
-              const fileName =
-                version.replace("^", "") + "/" + (npmProObj[key] ? npmProObj[key] : `dist/${key}.min.js`);
-              const url = `${protocol}://${cdnUrlObj[urlName]}/${key}${separators[urlName]}${fileName}`;
-              script += `<script src="${url}" type="text/javascript" onerror="errorCDN(this)" data-cur="0" data-key="${key}" data-filename="${fileName}"></script>\n`;
-            }
+        external.forEach((key) => {
+          if (customScript[key]) {
+            script += customScript[key];
+          } else {
+            const version = getPackageVersion(packageData, key);
+            const fileName = version + "/" + (_npmProObj[key] ? _npmProObj[key] : `dist/${key}.min.js`);
+            const url = `${protocol}://${cdnUrlObj[urlName]}/${key}${fileName}`;
+            script += `<script src="${url}" type="text/javascript" crossorigin="anonymous" onerror="errorCDN(this)" data-cur="0" data-key="${key}" data-filename="${fileName}"></script>\n`;
           }
         });
         html = html.replace("</head>", `${script}</head>`);
+
         return html;
       } catch (error) {
         console.error("获取dependencies出错:", error);
