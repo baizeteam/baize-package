@@ -9,22 +9,19 @@ enum EEnforce {
 }
 
 const cdnUrlObj = {
-  unpkg: "unpkg.com",
-  staticfile: "cdn.staticfile.net",
-  cdnjs: "cdnjs.cloudflare.com/ajax/libs",
   jsdelivr: "cdn.jsdelivr.net/npm",
+  unpkg: "unpkg.com",
 };
 
 const separators = {
-  unpkg: "@",
-  staticfile: "/",
-  cdnjs: "/",
   jsdelivr: "@",
+  unpkg: "@",
 };
 
 export interface IOptions {
   protocol?: string;
   customScript?: { [key: string]: string };
+  customFilepath?: { [key: string]: string };
   retryTimes?: number;
   defaultCdns?: string[];
 }
@@ -33,8 +30,9 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
   const {
     protocol = "https",
     customScript = {},
-    retryTimes = 3,
-    defaultCdns = ["unpkg", "cdnjs", "jsdelivr", "staticfile"],
+    retryTimes = 1,
+    defaultCdns = ["jsdelivr", "unpkg"],
+    customFilepath = {},
   } = opt;
   let _config;
   const _npmProObj = { ...customScript };
