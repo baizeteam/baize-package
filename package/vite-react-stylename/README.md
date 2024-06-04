@@ -15,7 +15,7 @@ pnpm install vite-react-stylename
 other devDependencies
 
 ```
-pnpm install less postcss-less generic-names @types/react-css-modules @types/node -D
+pnpm install less postcss-less generic-names @types/react-css-modules -D
 ```
 
 ### usage
@@ -81,6 +81,15 @@ you can use all the options exclude `webpackHotModuleReloading` of babel-plugin-
 | `attributeNames`             | `?AttributeNameMapType`                | Refer to [Custom Attribute Mapping](https://github.com/fchengjin/vite-plugin-react-css-module/blob/main/readme.md#custom-attribute-mapping)                                                                                                                                                                                                                                        | `{"styleName": "className"}`                 |
 | `skip`                       | `boolean`                              | Whether to apply plugin if no matching `attributeNames` found in the file                                                                                                                                                                                                                                                                                                          | `false`                                      |
 | `autoResolveMultipleImports` | `boolean`                              | Allow multiple anonymous imports if `styleName` is only in one of them.                                                                                                                                                                                                                                                                                                            | `false`                                      |
+
+
+
+### Todo
+
+- [x] use alias
+- [ ] Adapt to versions of vite 5.0.12 and above
+
+
 
 ### Special Thanks
 

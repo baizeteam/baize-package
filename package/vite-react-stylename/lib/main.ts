@@ -18,17 +18,20 @@ function viteReactStyleName(opt) {
       _alias = confing.resolve.alias;
     },
     transform(code, id) {
+      // 排除不处理的文件
       if (!/\.(t|j)sx?$/.test(id) || id.includes("node_modules")) {
         return null;
       }
       if (!id.endsWith("x") && !code.includes("react")) {
         return null;
       }
+      // 需要使用的解析插件
       const parserPlugins = ["jsx", "importMeta"];
       if (/\.tsx?$/.test(id)) {
         parserPlugins.push("typescript", "decorators-legacy");
       }
       const isReasonReact = id.endsWith(".bs.js");
+
       const result = transformSync(code, {
         babelrc: false,
         configFile: false,
