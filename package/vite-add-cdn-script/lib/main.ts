@@ -30,6 +30,20 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       _config = confing;
     },
     async transformIndexHtml(html) {
+      // cdn缓存文件
+      const cdnCachePath = path.resolve(process.cwd(), "./.cdn-cache.json");
+      let cdnCache = {};
+      let isUpdateCdnCache = false;
+      try {
+        // 读取文件内容
+        const cdnCacheFileText = await fs.readFileSync(cdnCachePath, "utf-8");
+        cdnCache = JSON.parse(cdnCacheFileText);
+      } catch (err) {
+        console.log("cdn缓存文件不存在，创建缓存文件");
+        // await fs.mkdir(cdnCachePath, { recursive: true });
+        await fs.writeFileSync(cdnCachePath, "", "utf-8");
+      }
+
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
       const packageJsonPath = path.resolve(process.cwd(), "package.json");
       try {
@@ -51,16 +65,38 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
               console.error(`package.json中不存在${key}的版本号`);
               return;
             }
-            return {
-              urls: await Promise.all(
-                defaultCdns.map(async (cdn) => {
-                  return await getPackageURL(key, version, cdn);
-                }),
-              ),
-              key,
-            };
+            if (cdnCache[key] && cdnCache[key][version]) {
+              // 命中cdn缓存
+              return {
+                urls: cdnCache[key][version],
+                key,
+              };
+            } else {
+              // 未命中cdn缓存
+              isUpdateCdnCache = true;
+              const res = {
+                urls: await Promise.all(
+                  defaultCdns.map(async (cdn) => {
+                    return await getPackageURL(key, version, cdn);
+                  }),
+                ),
+                key,
+              };
+              if (cdnCache[key]) {
+                cdnCache[key][version] = res.urls;
+              } else {
+                cdnCache[key] = {
+                  [version]: res.urls,
+                };
+              }
+              return res;
+            }
           }),
         );
+        if (isUpdateCdnCache) {
+          // 更新cdn缓存
+          fs.writeFileSync((process.cwd(), "./.cdn-cache.json"), JSON.stringify(cdnCache), "utf-8");
+        }
         urlListRes.forEach((element) => {
           if (!element) return;
           const { urls, key } = element;
