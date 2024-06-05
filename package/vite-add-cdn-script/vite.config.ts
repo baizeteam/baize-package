@@ -11,17 +11,26 @@ const externals = {
   "react-router": "react-router",
   "react-router-dom": "ReactRouterDOM",
 };
-export default defineConfig({
+
+const pageConfig = {
   plugins: [react(), viteAddCdnScript({})],
+  base: "./",
   build: {
-    // lib: {
-    //   entry: "./lib/main.ts",
-    //   name: "index",
-    //   fileName: "index",
-    // },
+    outDir: "dist-page",
     rollupOptions: {
       external: [...Object.keys(externals)],
       plugins: [externalGlobals(externals)],
     },
   },
-});
+};
+
+const libConfig = {
+  build: {
+    lib: {
+      entry: "./lib/main.ts",
+      name: "index",
+      fileName: "index",
+    },
+  },
+};
+export default defineConfig(process.env.BUILD_MODE === "lib" ? libConfig : pageConfig);
