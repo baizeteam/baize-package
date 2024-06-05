@@ -76,7 +76,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         function errorCDN(e) {
           const packNameUrl = JSON.parse('${JSON.stringify(packNameUrl)}');
           const nextCur = parseInt(e.getAttribute("data-cur")) + 1;
-          if(nextCur>=${retryTimes}){return;}
+          if(nextCur>${retryTimes}){return;}
           
           const key = e.getAttribute("data-key");
           if(nextCur>=packNameUrl[key].length){return;}
