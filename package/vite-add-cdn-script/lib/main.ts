@@ -10,17 +10,14 @@ enum EEnforce {
 }
 
 export interface IOptions {
-  protocol?: string;
   customScript?: { [key: string]: string };
-  customFilepath?: { [key: string]: string };
   retryTimes?: number;
   defaultCdns?: PropertyCdn[];
 }
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
-  const { protocol = "https", customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
+  const { customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
   let _config;
-  const _npmProObj = { ...customScript };
 
   return {
     name: "vite-add-cdn-script",
@@ -40,7 +37,6 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         cdnCache = JSON.parse(cdnCacheFileText);
       } catch (err) {
         console.log("cdn缓存文件不存在，创建缓存文件");
-        // await fs.mkdir(cdnCachePath, { recursive: true });
         await fs.writeFileSync(cdnCachePath, "", "utf-8");
       }
 
