@@ -4,24 +4,41 @@ import { unpkyDirectory, unpkgFiles, unpkgRes, PropertyCdn, bootcdnRes, cdnjsRes
 
 const req = {
   //get请求封装
-  get: (link: string | URL | https.RequestOptions, callback: (html: string) => void, fail: (e: any) => void) => {
-    try {
-      https.get(link, (req: http.IncomingMessage) => {
-        var html = "";
-        req.on("data", (data) => {
-          html += data;
+  get: (link: string | URL | https.RequestOptions, callback?: (html: string) => void, fail?: (e: any) => void) => {
+    return new Promise<string>((resolve, reject) => {
+      try {
+        https.get(link, (req: http.IncomingMessage) => {
+          let html = "";
+          req.on("data", (data) => {
+            html += data;
+          });
+          req.on("end", () => {
+            callback?.(html);
+            resolve(html);
+          });
         });
-        req.on("end", () => {
-          callback(html);
-        });
-      });
-    } catch (error) {
-      fail(error);
-    }
+      } catch (error) {
+        fail?.(error);
+        reject(error);
+      }
+    });
   },
 };
 
-export const getNpmPackageUrl = {};
+/**
+ *  获取package.json中的依赖版本
+ */
+export const getPackageJsonByUrl = async (url: string) => {
+  const packUrlRex = /^(https:\/\/.*\d+\.\d+\.\d+\/).+?\.js$/;
+  if (packUrlRex.test(url)) {
+    const packageJsonUrl = url.replace(packUrlRex, (_: string, suffix: string) => {
+      return `${suffix}package.json`;
+    });
+    return JSON.parse(await req.get(packageJsonUrl));
+  } else {
+    throw new Error(`${url} 不是正确的url`);
+  }
+};
 
 /**
  * 获取package.json中的依赖版本
