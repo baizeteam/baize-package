@@ -1,6 +1,6 @@
 import https from "https";
 import http from "http";
-import { unpkyDirectory, unpkgFiles, unpkgRes, PropertyCdn, bootcdnRes, cdnjsRes } from "./types";
+import { unpkyDirectory, unpkgFiles, unpkgRes, PropertyCdn, bootcdnRes, cdnjsRes } from "../types";
 
 const req = {
   //get请求封装
