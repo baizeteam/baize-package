@@ -101,7 +101,6 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
             external,
             packageData,
             customScript,
-
             defaultCdns,
           })) || [];
         // 没有找到本地版本的库，在库中寻找对应的版本

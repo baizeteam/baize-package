@@ -1,5 +1,4 @@
 import path from "path";
-import { PropertyCdn } from "../types";
 
 import fs from "fs";
 /**
@@ -7,11 +6,11 @@ import fs from "fs";
  */
 class CdnCache {
   private cdnCache: {
-    [k in PropertyCdn]?: {
+    [packageName: string]: {
       [version: string]: string[];
     };
-  };
-  private cdnCachePath: string;
+  } = {};
+  private cdnCachePath: string = "";
   constructor() {
     // cdn缓存文件
     this.cdnCachePath = path.resolve(process.cwd(), "./.cdn-cache.json");
