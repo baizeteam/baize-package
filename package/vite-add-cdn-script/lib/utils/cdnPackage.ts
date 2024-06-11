@@ -233,9 +233,7 @@ export const getPackageURL = async (packageName: string, version: string, cdn: P
 
   const fileName = getPackageFile(res, packageName);
   if (!fileName) {
-    throw new Error(
-      `Can't find the file of ${packageName}@${confirmVersion} in ${cdn}, please check the package name or version`,
-    );
+    throw new Error(`在 ${cdn} 中找不到 ${packageName}@${confirmVersion} 文件，请检查包名或版本号`);
   }
   return cdnUrlGeterr[cdn].getUrl(packageName, confirmVersion, fileName);
 };

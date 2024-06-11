@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { PluginOption } from "vite";
-import { getCdnCacheInstance, getPackageJsonByUrl, getPackageURL, getPackageVersion } from "./utils";
+import { composeVersionObj, getCdnCacheInstance, getPackageJsonByUrl, getPackageURL, getPackageVersion } from "./utils";
 import { PropertyCdn } from "./types";
 
 enum EEnforce {
@@ -75,7 +75,7 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
 }
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
-  const { customScript = {}, retryTimes = 1, defaultCdns = ["unpkg", "jsdelivr"] } = opt;
+  const { customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
   let _config;
 
   return {
@@ -94,15 +94,13 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         const external = _config.build.rollupOptions.external;
         const packNameUrl: { [k in PropertyCdn]?: string[] } = {};
 
-        // 没命中version的库
         let script = "";
-        const { urls: urlListRes, noVersionPackages } =
-          (await findUrls({
-            external,
-            packageData,
-            customScript,
-            defaultCdns,
-          })) || [];
+        const { urls: urlListRes, noVersionPackages } = await findUrls({
+          external,
+          packageData,
+          customScript,
+          defaultCdns,
+        });
         // 没有找到本地版本的库，在库中寻找对应的版本
         if (noVersionPackages.length > 0) {
           const urlPackageJsonRes: {
@@ -114,12 +112,14 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
             urlListRes.map(async (item) => {
               if (!item) return;
               const { key, urls } = item;
+              // 因为对应版本的package.json是相同的且都是从cdn获取的，所以只需要获取一个即可
               const findPackageJsonUrl = customScript[key] || urls[0];
               if (!findPackageJsonUrl) return;
               const packageJson = await getPackageJsonByUrl(findPackageJsonUrl);
-              Object.assign(urlPackageJsonRes.dependencies, packageJson.dependencies);
+              composeVersionObj(urlPackageJsonRes.dependencies, packageJson.dependencies);
             }),
           );
+          // findUrls中会进行未找到版本的库的中断报错处理
           const { urls: noPackageUrls, noVersionPackages: notFindPackages } = await findUrls({
             external: noVersionPackages,
             packageData: urlPackageJsonRes,
@@ -130,6 +130,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
           if (notFindPackages.length > 0) {
             console.error(`找不到${notFindPackages.join(",")}的版本`);
             // TODO： 是否中断用户打包处理？
+            throw new Error(`找不到${notFindPackages.join(",")}的版本`);
           }
         }
         urlListRes.forEach((element) => {
