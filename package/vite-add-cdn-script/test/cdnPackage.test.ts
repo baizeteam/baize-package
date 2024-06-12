@@ -1,6 +1,6 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, it, test } from "@jest/globals";
 import { PropertyCdn } from "../lib/types";
-import { cdnUrlGeterr, getPackageURL } from "../lib/utils";
+import { cdnUrlGeterr, getPackageJsonByUrl, getPackageURL } from "../lib/utils/cdnPackage";
 
 // 获取真实的包地址
 function getPackageFile(packageName: string, version: string) {
@@ -43,4 +43,17 @@ describe("get package url truly", () => {
       "https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.1/vue.global.prod.min.js",
     ]);
   }, 20000);
+
+  test("getPackageJsonByUrl react-router-dom@6.23.1", async () => {
+    const res = await getPackageJsonByUrl(
+      "https://unpkg.com/react-router-dom@6.23.1/dist/umd/react-router-dom.production.min.js",
+    );
+    expect(res.dependencies).toBeDefined();
+    expect(res.dependencies["@remix-run/router"]).toEqual("1.16.1");
+    expect(res.dependencies["react-router"]).toEqual("6.23.1");
+  });
+  it("getPackageJsonByUrl throw not cdn url", async () => {
+    const testUrl = "您吃了吗";
+    await expect(getPackageJsonByUrl(testUrl)).rejects.toEqual(new Error(`${testUrl} 不是正确的url`));
+  });
 });

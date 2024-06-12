@@ -1,27 +1,44 @@
 import https from "https";
 import http from "http";
-import { unpkyDirectory, unpkgFiles, unpkgRes, PropertyCdn, bootcdnRes, cdnjsRes } from "./types";
+import { unpkyDirectory, unpkgFiles, unpkgRes, PropertyCdn, bootcdnRes, cdnjsRes } from "../types";
 
 const req = {
   //get请求封装
-  get: (link: string | URL | https.RequestOptions, callback: (html: string) => void, fail: (e: any) => void) => {
-    try {
-      https.get(link, (req: http.IncomingMessage) => {
-        var html = "";
-        req.on("data", (data) => {
-          html += data;
+  get: (link: string | URL | https.RequestOptions, callback?: (html: string) => void, fail?: (e: any) => void) => {
+    return new Promise<string>((resolve, reject) => {
+      try {
+        https.get(link, (req: http.IncomingMessage) => {
+          let html = "";
+          req.on("data", (data) => {
+            html += data;
+          });
+          req.on("end", () => {
+            callback?.(html);
+            resolve(html);
+          });
         });
-        req.on("end", () => {
-          callback(html);
-        });
-      });
-    } catch (error) {
-      fail(error);
-    }
+      } catch (error) {
+        fail?.(error);
+        reject(error);
+      }
+    });
   },
 };
 
-export const getNpmPackageUrl = {};
+/**
+ *  获取package.json中的依赖版本
+ */
+export const getPackageJsonByUrl = async (url: string) => {
+  const packUrlRex = /^(https:\/\/.*\d+\.\d+\.\d+\/).+?\.js$/;
+  if (packUrlRex.test(url)) {
+    const packageJsonUrl = url.replace(packUrlRex, (_: string, suffix: string) => {
+      return `${suffix}package.json`;
+    });
+    return JSON.parse(await req.get(packageJsonUrl));
+  } else {
+    throw new Error(`${url} 不是正确的url`);
+  }
+};
 
 /**
  * 获取package.json中的依赖版本
@@ -216,9 +233,7 @@ export const getPackageURL = async (packageName: string, version: string, cdn: P
 
   const fileName = getPackageFile(res, packageName);
   if (!fileName) {
-    throw new Error(
-      `Can't find the file of ${packageName}@${confirmVersion} in ${cdn}, please check the package name or version`,
-    );
+    throw new Error(`在 ${cdn} 中找不到 ${packageName}@${confirmVersion} 文件，请检查包名或版本号`);
   }
   return cdnUrlGeterr[cdn].getUrl(packageName, confirmVersion, fileName);
 };

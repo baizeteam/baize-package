@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { PluginOption } from "vite";
-import { getPackageURL, getPackageVersion } from "./utils";
+import { composeVersionObj, getCdnCacheInstance, getPackageJsonByUrl, getPackageURL, getPackageVersion } from "./utils";
 import { PropertyCdn } from "./types";
 
 enum EEnforce {
@@ -13,6 +13,65 @@ export interface IOptions {
   customScript?: { [key: string]: string };
   retryTimes?: number;
   defaultCdns?: PropertyCdn[];
+}
+
+/**
+ *  获取cdn地址
+ */
+async function findUrls({ external, packageData, customScript, defaultCdns }) {
+  let noVersionPackages = [] as string[];
+  let isUpdateCdnCache = false;
+  const cdnCache = await getCdnCacheInstance();
+  return await Promise.all<
+    | {
+        urls: string[];
+        key: string;
+      }
+    | undefined
+  >(
+    external.map(async (key) => {
+      const version = getPackageVersion(packageData, key);
+      if (customScript[key]) {
+        return {
+          urls: [],
+          key,
+        };
+      }
+      if (!version) {
+        noVersionPackages.push(key);
+        return;
+      }
+      const cacheUrls = cdnCache.getCdnCache(key, version);
+      if (cacheUrls) {
+        // 命中cdn缓存
+        return {
+          urls: cacheUrls,
+          key,
+        };
+      } else {
+        // 未命中cdn缓存
+        isUpdateCdnCache = true;
+        const res = {
+          urls: await Promise.all(
+            defaultCdns.map(async (cdn) => {
+              return await getPackageURL(key, version, cdn);
+            }),
+          ),
+          key,
+        };
+        cdnCache.setCdnCache(key, version, res.urls);
+        return res;
+      }
+    }),
+  ).then((res) => {
+    if (isUpdateCdnCache) {
+      cdnCache.save();
+    }
+    return {
+      urls: res,
+      noVersionPackages,
+    };
+  });
 }
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
@@ -27,19 +86,6 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       _config = confing;
     },
     async transformIndexHtml(html) {
-      // cdn缓存文件
-      const cdnCachePath = path.resolve(process.cwd(), "./.cdn-cache.json");
-      let cdnCache = {};
-      let isUpdateCdnCache = false;
-      try {
-        // 读取文件内容
-        const cdnCacheFileText = await fs.readFileSync(cdnCachePath, "utf-8");
-        cdnCache = JSON.parse(cdnCacheFileText);
-      } catch (err) {
-        console.log("cdn缓存文件不存在，创建缓存文件");
-        await fs.writeFileSync(cdnCachePath, "", "utf-8");
-      }
-
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
       const packageJsonPath = path.resolve(process.cwd(), "package.json");
       try {
@@ -47,51 +93,45 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         const packageData = JSON.parse(packageJson);
         const external = _config.build.rollupOptions.external;
         const packNameUrl: { [k in PropertyCdn]?: string[] } = {};
+
         let script = "";
-        const urlListRes = await Promise.all(
-          external.map(async (key) => {
-            const version = getPackageVersion(packageData, key);
-            if (customScript[key]) {
-              return {
-                urls: [],
-                key,
-              };
-            }
-            if (!version) {
-              console.error(`package.json中不存在${key}的版本号`);
-              return;
-            }
-            if (cdnCache[key] && cdnCache[key][version]) {
-              // 命中cdn缓存
-              return {
-                urls: cdnCache[key][version],
-                key,
-              };
-            } else {
-              // 未命中cdn缓存
-              isUpdateCdnCache = true;
-              const res = {
-                urls: await Promise.all(
-                  defaultCdns.map(async (cdn) => {
-                    return await getPackageURL(key, version, cdn);
-                  }),
-                ),
-                key,
-              };
-              if (cdnCache[key]) {
-                cdnCache[key][version] = res.urls;
-              } else {
-                cdnCache[key] = {
-                  [version]: res.urls,
-                };
-              }
-              return res;
-            }
-          }),
-        );
-        if (isUpdateCdnCache) {
-          // 更新cdn缓存
-          fs.writeFileSync((process.cwd(), "./.cdn-cache.json"), JSON.stringify(cdnCache), "utf-8");
+        const { urls: urlListRes, noVersionPackages } = await findUrls({
+          external,
+          packageData,
+          customScript,
+          defaultCdns,
+        });
+        // 没有找到本地版本的库，在库中寻找对应的版本
+        if (noVersionPackages.length > 0) {
+          const urlPackageJsonRes: {
+            dependencies: {
+              [key: string]: string;
+            };
+          } = { dependencies: {} };
+          await Promise.all(
+            urlListRes.map(async (item) => {
+              if (!item) return;
+              const { key, urls } = item;
+              // 因为对应版本的package.json是相同的且都是从cdn获取的，所以只需要获取一个即可
+              const findPackageJsonUrl = customScript[key] || urls[0];
+              if (!findPackageJsonUrl) return;
+              const packageJson = await getPackageJsonByUrl(findPackageJsonUrl);
+              composeVersionObj(urlPackageJsonRes.dependencies, packageJson.dependencies);
+            }),
+          );
+          // findUrls中会进行未找到版本的库的中断报错处理
+          const { urls: noPackageUrls, noVersionPackages: notFindPackages } = await findUrls({
+            external: noVersionPackages,
+            packageData: urlPackageJsonRes,
+            customScript,
+            defaultCdns,
+          });
+          urlListRes.push(...noPackageUrls);
+          if (notFindPackages.length > 0) {
+            console.error(`找不到${notFindPackages.join(",")}的版本`);
+            // TODO： 是否中断用户打包处理？
+            throw new Error(`找不到${notFindPackages.join(",")}的版本`);
+          }
         }
         urlListRes.forEach((element) => {
           if (!element) return;
