@@ -83,17 +83,7 @@ options
 | retryTimes   | 重试次数            | number                      | 3                     |
 | defaultCdns  | 默认使用 cdn 的顺序 | string[]                    | ["jsdelivr", "unpkg"] |
 
-
-
-## 代办
-
-- [ ] 适配vue相关基础库
-- [x] 适配常用的工具类
-- [x] 兼容bootcdn
-- [x] 兼容cdnjs
-
-
-
 ## 注意事项
 
-接入了各大cdn的api接口进行请求，默认会保存一份cdn的缓存在你的根目录中`.cdn-cache.json`。如果发现缓存的资源有问题可以删除该文件，然后重新执行打包流程。
+- 接入了各大 cdn 的 api 接口进行请求，默认会保存一份 cdn 的缓存在你的根目录中`.cdn-cache.json`。如果发现缓存的资源有问题可以删除该文件，然后重新执行打包流程。
+- 按顺序添加cdn，如react-router-dom需要依赖react、@remix-run/router、react-router，因此需要放在最后。
