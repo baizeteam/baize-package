@@ -51,6 +51,7 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
       } else {
         // 未命中cdn缓存
         isUpdateCdnCache = true;
+        console.log(`从网络获取${key}${version}的cdn地址`);
         const res = {
           urls: await Promise.all(
             defaultCdns.map(async (cdn) => {
