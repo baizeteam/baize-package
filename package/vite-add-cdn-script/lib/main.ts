@@ -39,7 +39,10 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
       }
       if (!version) {
         noVersionPackages.push(key);
-        return;
+        return {
+          urls: [],
+          key,
+        };
       }
       const cacheUrls = cdnCache.getCdnCache(key, version);
       if (cacheUrls) {
@@ -127,7 +130,13 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
             customScript,
             defaultCdns,
           });
-          urlListRes.push(...noPackageUrls);
+          // 合并未找到版本的库的cdn地址列表（保持原有顺序）
+          noPackageUrls.map((item) => {
+            if (!item) return;
+            const { urls, key } = item;
+            urlListRes.find((item) => item?.key === key)?.urls.push(...urls);
+          });
+          // urlListRes.push(...noPackageUrls);
           if (notFindPackages.length > 0) {
             console.error(`找不到${notFindPackages.join(",")}的版本`);
             // TODO： 是否中断用户打包处理？
