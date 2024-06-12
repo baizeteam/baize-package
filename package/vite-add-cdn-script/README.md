@@ -79,9 +79,7 @@ options
 
 | 参数         | 解析                | 类型                        | 默认值                |
 | ------------ | ------------------- | --------------------------- | --------------------- |
-| protocol     | 协议                | “http”\|“https”             | https                 |
 | customScript | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                    |
-| custom       | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                    |
 | retryTimes   | 重试次数            | number                      | 3                     |
 | defaultCdns  | 默认使用 cdn 的顺序 | string[]                    | ["jsdelivr", "unpkg"] |
 
@@ -90,38 +88,12 @@ options
 ## 代办
 
 - [ ] 适配vue相关基础库
-- [ ] 适配常用的工具类
-- [ ] 兼容bootcdn
-- [ ] 兼容cdnjs
+- [x] 适配常用的工具类
+- [x] 兼容bootcdn
+- [x] 兼容cdnjs
 
 
 
 ## 注意事项
 
-因为 cdn 对包管理的命名有很大的不同，默认是使用了 dist/xxx.min.js 的文件，如果您使用的库的 cdn 文件不是这个的话，则需要配置为自定义的 cdn。
-
-目前做了适配的非 xxx.min.js 适配的库如下，如果你有合适的 cdn 源或者，需要适配的库，欢迎提交 issue 或者 pr！！！
-
-```
-{
-  // react
-  react: "umd/react.production.min.js",
-  "react-dom": "umd/react-dom.production.min.js",
-  "@remix-run/router": "dist/router.umd.min.js",
-  "react-router": "dist/umd/react-router.production.min.js",
-  "react-router-dom": "dist/umd/react-router-dom.production.min.js",
-  mobx: "dist/mobx.umd.production.min.js",
-  "mobx-react": "dist/mobxreact.umd.production.min.js",
-
-  // vue
-  vue: "dist/vue.global.prod.min.js",
-  "vue-router": "dist/vue-router.global.prod.min.js",
-  "vue-demi": "lib/index.iife.min.js",
-  pinia: "dist/pinia.iife.min.js",
-
-  // tool
-  dayjs: "dayjs.min.js",
-  moment: "moment.min.js",
-  lodash: "lodash.min.js",
-}
-```
+接入了各大cdn的api接口进行请求，默认会保存一份cdn的缓存在你的根目录中`.cdn-cache.json`。如果发现缓存的资源有问题可以删除该文件，然后重新执行打包流程。
