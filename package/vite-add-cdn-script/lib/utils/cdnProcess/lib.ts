@@ -66,7 +66,7 @@ export const getPackageURL = async (packageName: string, version: string, cdn: P
   }
 
   const res = await cdnUrlGeterr[cdn].getFileList(packageName, confirmVersion).catch(() => {
-    throw new Error(`${cdn} API 请求失败`);
+    throw new Error(`${packageName} ${version} ${cdn} API 请求失败`);
   });
 
   const fileName = getPackageFile(res, packageName);
