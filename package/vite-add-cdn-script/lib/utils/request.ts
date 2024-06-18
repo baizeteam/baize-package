@@ -65,7 +65,7 @@ export class LimitPromise {
     };
   }
 }
-const limitReq = new LimitPromise(https.globalAgent.options.maxSockets);
+const limitReq = new LimitPromise(5);
 
 const req = {
   //get请求封装
