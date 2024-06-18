@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from "@jest/globals";
 import { PropertyCdn } from "../lib/types";
-import { cdnUrlGeterr, getPackageJsonByUrl, getPackageURL } from "../lib/utils/cdnPackage";
+import { cdnUrlGeterr, getPackageJsonByUrl, getPackageURL } from "../lib/utils";
 
 // 获取真实的包地址
 function getPackageFile(packageName: string, version: string) {
