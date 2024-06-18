@@ -1,3 +1,3 @@
 export * from "./cache";
-export * from "./cdnPackage";
+export * from "./cdnProcess/index";
 export * from "./versionHandler";
