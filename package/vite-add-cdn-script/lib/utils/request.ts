@@ -73,12 +73,23 @@ const req = {
     return new Promise<string>((resolve, reject) => {
       try {
         https
-          .get(link, (req: http.IncomingMessage) => {
+          .get(link, (response: http.IncomingMessage) => {
             let html = "";
-            req.on("data", (data) => {
+            response.on("data", (data) => {
               html += data;
             });
-            req.on("end", () => {
+            response.on("end", () => {
+              if (response.headers.location) {
+                let location = response.headers.location;
+                if (location.startsWith("http")) {
+                  req.get(location, callback, fail).then(resolve, reject);
+                  return;
+                } else {
+                  const url = new URL(link as string);
+                  req.get(url.toString().replace(/(?<=\.\w+)\/.+/, location), callback, fail).then(resolve, reject);
+                  return;
+                }
+              }
               callback?.(html);
               resolve(html);
             });

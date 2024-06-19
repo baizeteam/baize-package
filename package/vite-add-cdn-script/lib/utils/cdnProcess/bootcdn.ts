@@ -38,7 +38,7 @@ const bootcdnProcess: CdnUrlGeterrObj = {
             };
           });
 
-          resolve({ fileList, recommendFileName: packageInfo.filename });
+          resolve({ fileList, recommendFileName: packageInfo.filename, version });
         },
         (e: unknown) => {
           reject(e);

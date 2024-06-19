@@ -15,7 +15,7 @@ const jsdelivrProcess: CdnUrlGeterrObj = {
             reject(new Error(`${packageName}@${version} not found`));
             return;
           }
-          resolve({ fileList: res });
+          resolve({ fileList: res, version });
         },
         (e: unknown) => {
           reject(e);

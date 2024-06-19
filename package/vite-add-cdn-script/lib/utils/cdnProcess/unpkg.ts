@@ -27,27 +27,34 @@ export const unpkgDirectoryHandle = (res: (unpkyDirectory | unpkgFiles)[]) => {
     return pre;
   }, [] as FileNameRes["fileList"]);
 };
+function getFileList(packageName: string, version: string) {
+  // unpkg.com/react@18.3.1/?meta
+  return new Promise<FileNameRes>((resolve, reject) => {
+    // unpkg.com version能直接传入解析规则
+    req.get(
+      `https://unpkg.com/${packageName}@${version}/?meta`,
+      (data: string) => {
+        try {
+          const res: unpkgRes = JSON.parse(data);
+          resolve({ fileList: unpkgDirectoryHandle(res.files || []), version });
+        } catch (err) {
+          reject(err);
+        }
+      },
+      (e: unknown) => {
+        reject(e);
+      },
+    );
+  });
+}
+function getUrl(packageName: string, version: string, fileName: string) {
+  // unpkg.com/:package@:version/:file
+  return `https://unpkg.com/${packageName}@${version}${fileName}`;
+}
 
 const unpkgProcess: CdnUrlGeterrObj = {
-  getFileList: (packageName: string, version: string) => {
-    // unpkg.com/react@18.3.1/?meta
-    return new Promise<FileNameRes>((resolve, reject) => {
-      req.get(
-        `https://unpkg.com/${packageName}@${version}/?meta`,
-        (data: string) => {
-          const res: unpkgRes = JSON.parse(data);
-          resolve({ fileList: unpkgDirectoryHandle(res.files || []) });
-        },
-        (e: unknown) => {
-          reject(e);
-        },
-      );
-    });
-  },
-  getUrl: (packageName: string, version: string, fileName: string) => {
-    // unpkg.com/:package@:version/:file
-    return `https://unpkg.com/${packageName}@${version}${fileName}`;
-  },
+  getFileList,
+  getUrl,
 };
 
 export default unpkgProcess;

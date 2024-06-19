@@ -9,12 +9,14 @@ export type FileNameRes = {
   fileList: {
     name: string;
   }[];
+  version: string;
   recommendFileName?: string;
 };
 
 export type CdnUrlGeterrObj = {
   getFileList: (packageName: string, version: string) => Promise<FileNameRes>;
   getUrl: (packageName: string, version: string, fileName: string) => string;
+  getVersionList?: (packageName: string) => Promise<string[]>;
 };
 
 /**
@@ -60,20 +62,20 @@ export const getPackageVersion = (
  */
 export const getPackageURL = async (packageName: string, version: string, cdn: PropertyCdn) => {
   // 再这一步做分离是为了之后可能做 @ ~ 等符号的处理,🤔每个cdn的具体方案可能不同
-  const confirmVersion = version.match(/\d+(.\d+)?(.\d+)?/)?.[0];
+  const confirmVersion = version.match(/\d+(.\d+)?(.\d+)?/);
   if (!confirmVersion) {
     throw new Error(`${packageName} version ${version} is not valid`);
   }
 
-  const res = await cdnUrlGeterr[cdn].getFileList(packageName, confirmVersion).catch(() => {
-    throw new Error(`${packageName} ${version} ${cdn} API 请求失败`);
+  const res = await cdnUrlGeterr[cdn].getFileList(packageName, version).catch((err) => {
+    throw new Error(`${err} ${packageName} ${version} ${cdn} API 请求失败`);
   });
 
   const fileName = getPackageFile(res, packageName);
   if (!fileName) {
     throw new Error(`在 ${cdn} 中找不到 ${packageName}@${confirmVersion} 文件，请检查包名或版本号`);
   }
-  return cdnUrlGeterr[cdn].getUrl(packageName, confirmVersion, fileName);
+  return cdnUrlGeterr[cdn].getUrl(packageName, res.version, fileName);
 };
 
 /**
