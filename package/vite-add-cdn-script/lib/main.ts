@@ -37,14 +37,15 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
           key,
         };
       }
-      if (!version) {
+      const cacheUrls = cdnCache.getCdnCache(key, version);
+      if (!version && !cacheUrls) {
         noVersionPackages.push(key);
         return {
           urls: [],
           key,
         };
       }
-      const cacheUrls = cdnCache.getCdnCache(key, version);
+
       if (cacheUrls) {
         // 命中cdn缓存
         return {
@@ -139,7 +140,6 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
           // urlListRes.push(...noPackageUrls);
           if (notFindPackages.length > 0) {
             console.error(`找不到${notFindPackages.join(",")}的版本`);
-            // TODO： 是否中断用户打包处理？
             throw new Error(`找不到${notFindPackages.join(",")}的版本`);
           }
         }
