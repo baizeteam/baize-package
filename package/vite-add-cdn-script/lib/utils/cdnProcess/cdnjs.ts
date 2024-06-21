@@ -61,6 +61,5 @@ const getVersionList = (packageName: string) => {
 const cdnjsProcess: CdnUrlGeterrObj = {
   getFileList,
   getUrl,
-  getVersionList,
 };
 export default cdnjsProcess;

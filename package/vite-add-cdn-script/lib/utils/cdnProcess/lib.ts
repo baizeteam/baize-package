@@ -16,7 +16,6 @@ export type FileNameRes = {
 export type CdnUrlGeterrObj = {
   getFileList: (packageName: string, version: string) => Promise<FileNameRes>;
   getUrl: (packageName: string, version: string, fileName: string) => string;
-  getVersionList?: (packageName: string) => Promise<string[]>;
 };
 
 /**
