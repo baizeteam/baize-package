@@ -23,10 +23,10 @@ function getFileList(packageName: string, version: string, doubleFind = false) {
       });
       return;
     }
-    const confirmVersion = version.match(/\d+(.\d+)?(.\d+)?/)?.[0];
+
     // https://api.cdnjs.com/libraries/jquery/3.5.1
     req.get(
-      `https://api.cdnjs.com/libraries/${packageName}/${confirmVersion}`,
+      `https://api.cdnjs.com/libraries/${packageName}/${version}`,
       (data: string) => {
         const res: cdnjsLibrariesRes = JSON.parse(data);
         if (res.error) {

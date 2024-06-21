@@ -1,5 +1,6 @@
 import req from "../request";
 import { CdnUrlGeterrObj, FileNameRes } from "./lib";
+import semver from "semver";
 
 export type bootcdnRes = {
   filename: string;
@@ -23,9 +24,11 @@ const bootcdnProcess: CdnUrlGeterrObj = {
           }
           // 一般第一项就是要找到的包，暂时没有遇到过在第二项的情况
           const packageInfo = res[0];
-          const assets = packageInfo.assets;
+          const assets = packageInfo.assets.reverse();
           const versionItem = assets.find((item) => {
-            return item.version === version;
+            if (semver.satisfies(item.version, version)) {
+              return true;
+            }
           });
           if (!versionItem) {
             reject(new Error(`${packageName}@${version} not found in ${packageInfo.name}`));
@@ -38,7 +41,7 @@ const bootcdnProcess: CdnUrlGeterrObj = {
             };
           });
 
-          resolve({ fileList, recommendFileName: packageInfo.filename, version });
+          resolve({ fileList, recommendFileName: packageInfo.filename, version: versionItem.version });
         },
         (e: unknown) => {
           reject(e);
