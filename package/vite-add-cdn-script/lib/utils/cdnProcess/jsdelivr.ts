@@ -1,6 +1,46 @@
 import req from "../request";
 import { CdnUrlGeterrObj, FileNameRes } from "./lib";
 
+interface JsdeliverFile {
+  type: "file";
+  name: string;
+  hash: string;
+  size: number;
+}
+
+interface JsdeliverDirectory {
+  type: "directory";
+  name: string;
+  files: (JsdeliverFile | JsdeliverDirectory)[];
+}
+
+interface JsdeliverLinks {
+  stats: string;
+  entrypoints: string;
+}
+
+interface JsdeliverPackage {
+  status?: number;
+  type: string;
+  name: string;
+  version: string;
+  default: string;
+  files: (JsdeliverFile | JsdeliverDirectory)[];
+  links: JsdeliverLinks;
+}
+/**
+ * unpakg directory处理
+ */
+export const jsdelivrDirectoryHandle = (res: (JsdeliverDirectory | JsdeliverFile)[], preName = "") => {
+  return res.reduce((pre, cur) => {
+    if (cur.type === "file") {
+      pre.push({ name: `${preName}/${cur.name}` });
+    } else if (cur.files) {
+      pre.push(...jsdelivrDirectoryHandle(cur.files, `${preName}/${cur.name}`));
+    }
+    return pre;
+  }, [] as FileNameRes["fileList"]);
+};
 function getFileList(packageName: string, version: string, doubleFind = false) {
   return new Promise<FileNameRes>((resolve, reject) => {
     if (!doubleFind && version.match(/^\D/)) {
@@ -15,16 +55,14 @@ function getFileList(packageName: string, version: string, doubleFind = false) {
     }
     // /v1/stats/packages/npm/{package}@{version}/files
     req.get(
-      `https://data.jsdelivr.com/v1/stats/packages/npm/${packageName}@${version}/files`,
+      `https://data.jsdelivr.com/v1/packages/npm/${packageName}@${version}`,
       (data: string) => {
-        const res: (FileNameRes["fileList"][number] & {
-          [x: string]: unknown;
-        })[] = JSON.parse(data);
-        if (res.length === 0) {
+        const res: JsdeliverPackage = JSON.parse(data);
+        if (res.status) {
           reject(new Error(`${packageName}@${version} not found`));
           return;
         }
-        resolve({ fileList: res, version });
+        resolve({ fileList: jsdelivrDirectoryHandle(res.files), version });
       },
       (e: unknown) => {
         reject(e);
