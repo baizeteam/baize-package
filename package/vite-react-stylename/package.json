@@ -10,7 +10,7 @@
     "vite-plugin-react-css-module"
   ],
   "description": "A plugin for vite to support react styleName and css-modules",
-  "repository":{
+  "repository": {
     "type": "git",
     "url": "git+https://github.com/baizeteam/baize-vite-plugin.git"
   },

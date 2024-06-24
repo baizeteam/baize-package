@@ -1,6 +1,6 @@
 {
   "name": "vite-add-cdn-script",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "keywords": [
     "vite",
     "cdn",
@@ -42,8 +42,8 @@
     "@vitejs/plugin-react": "^4.2.1",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
     "rollup-plugin-external-globals": "^0.10.0",
     "rollup-plugin-node-externals": "^7.1.2",
