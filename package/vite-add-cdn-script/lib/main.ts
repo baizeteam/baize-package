@@ -40,7 +40,10 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
       const cacheUrls = cdnCache.getCdnCache(key, version);
       if (!version && !cacheUrls) {
         noVersionPackages.push(key);
-        return;
+        return {
+          urls: [],
+          key,
+        };
       }
 
       if (cacheUrls) {
@@ -52,6 +55,7 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
       } else {
         // 未命中cdn缓存
         isUpdateCdnCache = true;
+        console.log(`从网络获取${key}${version}的cdn地址`);
         const res = {
           urls: await Promise.all(
             defaultCdns.map(async (cdn) => {
@@ -127,7 +131,13 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
             customScript,
             defaultCdns,
           });
-          urlListRes.push(...noPackageUrls);
+          // 合并未找到版本的库的cdn地址列表（保持原有顺序）
+          noPackageUrls.map((item) => {
+            if (!item) return;
+            const { urls, key } = item;
+            urlListRes.find((item) => item?.key === key)?.urls.push(...urls);
+          });
+          // urlListRes.push(...noPackageUrls);
           if (notFindPackages.length > 0) {
             console.error(`找不到${notFindPackages.join(",")}的版本`);
             throw new Error(`找不到${notFindPackages.join(",")}的版本`);
