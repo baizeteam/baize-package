@@ -77,11 +77,11 @@ export default defineConfig({
 
 options
 
-| 参数         | 解析                | 类型                        | 默认值                | 可选值                           |
-| ------------ | ------------------- | --------------------------- | --------------------- | -------------------------------- |
-| customScript | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                    |                                  |
-| retryTimes   | 重试次数            | number                      | 1                     |                                  |
-| defaultCdns  | 默认使用 cdn 的顺序 | string[]                    | ["jsdelivr", "unpkg"] | jsdeliver、unpkg、bootcdn、cdnjs |
+| 参数         | 解析                | 类型                        | 默认值                                  |
+| ------------ | ------------------- | --------------------------- | --------------------------------------- |
+| customScript | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                                      |
+| retryTimes   | 换源重试次数        | number                      | defaultCdns.length - 1                  |
+| defaultCdns  | 默认使用 cdn 的顺序 | string[]                    | ["jsdelivr", "unpkg"] |
 
 ## 注意事项
 
