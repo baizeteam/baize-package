@@ -1,3 +1,4 @@
+import { NetworkError, NoVersionError, PackageNetworkError } from "../ErrorTypes";
 import req from "../request";
 import { CdnUrlGeterrObj, FileNameRes } from "./lib";
 
@@ -41,34 +42,40 @@ export const jsdelivrDirectoryHandle = (res: (JsdeliverDirectory | JsdeliverFile
     return pre;
   }, [] as FileNameRes["fileList"]);
 };
-function getFileList(packageName: string, version: string, doubleFind = false) {
-  return new Promise<FileNameRes>((resolve, reject) => {
+async function getFileList(packageName: string, version: string, doubleFind = false) {
+  try {
     if (!doubleFind && version.match(/^\D/)) {
-      getSpecifierVersion(packageName, version).then((version) => {
-        if (typeof version === "string") {
-          getFileList(packageName, version, true).then(resolve, reject);
-        } else {
-          reject(new Error(`${packageName} ${version} not found`));
-        }
-      });
-      return;
+      const specifierVersion = await getSpecifierVersion(packageName, version);
+      if (typeof specifierVersion === "string") {
+        return getFileList(packageName, specifierVersion, true);
+      } else {
+        throw new NoVersionError({
+          packageName,
+          version,
+          cdn: "jsdelivr",
+        });
+      }
     }
-    // /v1/stats/packages/npm/{package}@{version}/files
-    req.get(
-      `https://data.jsdelivr.com/v1/packages/npm/${packageName}@${version}`,
-      (data: string) => {
-        const res: JsdeliverPackage = JSON.parse(data);
-        if (res.status) {
-          reject(new Error(`${packageName}@${version} not found`));
-          return;
-        }
-        resolve({ fileList: jsdelivrDirectoryHandle(res.files), version });
-      },
-      (e: unknown) => {
-        reject(e);
-      },
-    );
-  });
+
+    const res = await req.get<JsdeliverPackage>(`https://data.jsdelivr.com/v1/packages/npm/${packageName}@${version}`);
+    if (res.status) {
+      throw new NoVersionError({
+        packageName,
+        version,
+        cdn: "jsdelivr",
+      });
+    }
+    return { fileList: jsdelivrDirectoryHandle(res.files), version };
+  } catch (error) {
+    if (error instanceof NetworkError) {
+      throw new PackageNetworkError({
+        packageName,
+        version,
+        cdn: "unpkg",
+      });
+    }
+    throw error;
+  }
 }
 const getUrl = (packageName: string, version: string, fileName: string) => {
   // https://cdn.jsdelivr.net/npm/package@version/file
@@ -86,16 +93,23 @@ type SpecifierVersionRes = {
 };
 
 const getSpecifierVersion = async (packageName: string, version: string) => {
-  return await req.get(`https://data.jsdelivr.com/v1/packages/npm/${packageName}/resolved?specifier=${version}`).then(
-    (data: string) => {
-      const res: SpecifierVersionRes = JSON.parse(data);
-      return res.version;
-    },
-    (e: unknown) => {
-      return e;
-    },
-  );
+  try {
+    const res = await req.get<SpecifierVersionRes>(
+      `https://data.jsdelivr.com/v1/packages/npm/${packageName}/resolved?specifier=${version}`,
+    );
+    return res.version;
+  } catch (error) {
+    if (error instanceof NetworkError) {
+      throw new PackageNetworkError({
+        packageName,
+        version,
+        cdn: "unpkg",
+      });
+    }
+    throw error;
+  }
 };
+
 const jsdelivrProcess: CdnUrlGeterrObj = {
   getFileList,
   // 拼接url

@@ -1,4 +1,5 @@
 import { PropertyCdn } from "../../types";
+import { GetFileListError } from "../ErrorTypes";
 import req from "../request";
 import bootcdnProcess from "./bootcdn";
 import cdnjsProcess from "./cdnjs";
@@ -27,7 +28,10 @@ export const getPackageJsonByUrl = async (url: string) => {
     const packageJsonUrl = url.replace(packUrlRex, (_: string, suffix: string) => {
       return `${suffix}package.json`;
     });
-    return JSON.parse(await req.get(packageJsonUrl));
+    return await req.get<{
+      devDependencies: Record<string, string>;
+      dependencies: Record<string, string>;
+    }>(packageJsonUrl);
   } else {
     throw new Error(`${url} 不是正确的url`);
   }
@@ -66,13 +70,15 @@ export const getPackageURL = async (packageName: string, version: string, cdn: P
     throw new Error(`${packageName} version ${version} is not valid`);
   }
 
-  const res = await cdnUrlGeterr[cdn].getFileList(packageName, version).catch((err) => {
-    throw new Error(`${err} ${packageName} ${version} ${cdn} API 请求失败`);
-  });
+  const res = await cdnUrlGeterr[cdn].getFileList(packageName, version);
 
   const fileName = getPackageFile(res, packageName);
   if (!fileName) {
-    throw new Error(`在 ${cdn} 中找不到 ${packageName}@${confirmVersion} 文件，请检查包名或版本号`);
+    throw new GetFileListError({
+      packageName,
+      version,
+      cdn,
+    });
   }
   return cdnUrlGeterr[cdn].getUrl(packageName, res.version, fileName);
 };

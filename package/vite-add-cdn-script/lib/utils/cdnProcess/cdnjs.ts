@@ -1,5 +1,6 @@
+import { NetworkError, NoVersionError, PackageNetworkError } from "../ErrorTypes";
 import req from "../request";
-import { CdnUrlGeterrObj, FileNameRes } from "./lib";
+import { CdnUrlGeterrObj } from "./lib";
 import semver from "semver";
 export type cdnjsLibrariesRes = {
   rawFiles: string[];
@@ -7,56 +8,69 @@ export type cdnjsLibrariesRes = {
   [x: string]: unknown;
 };
 type cdnjsVersionRes = {
-  version: string[];
+  versions: string[];
 };
 
-function getFileList(packageName: string, version: string, doubleFind = false) {
-  return new Promise<FileNameRes>((resolve, reject) => {
+async function getFileList(packageName: string, version: string, doubleFind = false) {
+  try {
     if (!doubleFind && version.match(/^\D/)) {
-      getVersionList(packageName).then((versionList) => {
-        for (let item of versionList) {
-          if (semver.satisfies(item, version)) {
-            getFileList(packageName, item, true).then(resolve, reject);
-            return;
-          }
+      const versionList = await getVersionList(packageName, version);
+      for (let item of versionList) {
+        if (semver.satisfies(item, version)) {
+          return getFileList(packageName, item, true);
         }
+      }
+      throw new NoVersionError({
+        packageName,
+        version,
+        cdn: "cdnjs",
       });
-      return;
     }
-
-    // https://api.cdnjs.com/libraries/jquery/3.5.1
-    req.get(
-      `https://api.cdnjs.com/libraries/${packageName}/${version}`,
-      (data: string) => {
-        const res: cdnjsLibrariesRes = JSON.parse(data);
-        if (res.error) {
-          reject(new Error(`cdnjs: ${packageName}@${version} not found`));
-          return;
-        }
-        resolve({
-          fileList: res.rawFiles.map((item) => {
-            return {
-              name: "/" + item,
-            };
-          }),
-          version,
-        });
-      },
-      (e: unknown) => {
-        reject(e);
-      },
-    );
-  });
+    const res = await req.get<cdnjsLibrariesRes>(`https://api.cdnjs.com/libraries/${packageName}/${version}`);
+    if (res.error) {
+      throw new NoVersionError({
+        packageName,
+        version,
+        cdn: "cdnjs",
+      });
+    }
+    return {
+      fileList: res.rawFiles.map((item) => {
+        return {
+          name: "/" + item,
+        };
+      }),
+      version,
+    };
+  } catch (error) {
+    if (error instanceof NetworkError) {
+      throw new PackageNetworkError({
+        packageName,
+        version,
+        cdn: "unpkg",
+      });
+    }
+    throw error;
+  }
 }
 const getUrl = (packageName: string, version: string, fileName: string) => {
   // https://cdnjs.cloudflare.com/ajax/libs/react-is/18.3.1/cjs/react-is.production.min.js
   return `https://cdnjs.cloudflare.com/ajax/libs/${packageName}/${version}${fileName}`;
 };
-const getVersionList = (packageName: string) => {
-  return req.get(`https://api.cdnjs.com/libraries/${packageName}?fields=versions`).then((data: string) => {
-    const res: cdnjsVersionRes = JSON.parse(data);
-    return res.version;
-  });
+const getVersionList = async (packageName: string, version: string) => {
+  try {
+    const res = await req.get<cdnjsVersionRes>(`https://api.cdnjs.com/libraries/${packageName}?fields=versions`);
+    return res.versions;
+  } catch (error) {
+    if (error instanceof NetworkError) {
+      throw new PackageNetworkError({
+        packageName,
+        version,
+        cdn: "unpkg",
+      });
+    }
+    throw error;
+  }
 };
 const cdnjsProcess: CdnUrlGeterrObj = {
   getFileList,
