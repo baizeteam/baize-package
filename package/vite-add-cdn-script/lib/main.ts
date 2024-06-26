@@ -1,8 +1,9 @@
 import path from "path";
 import fs from "fs";
-import { PluginOption } from "vite";
+import { PluginOption, UserConfig } from "vite";
 import { composeVersionObj, getCdnCacheInstance, getPackageJsonByUrl, getPackageURL, getPackageVersion } from "./utils";
 import { PropertyCdn } from "./types";
+import ConsoleManage from "./utils/consoleManage";
 
 enum EEnforce {
   PRE = "pre",
@@ -14,11 +15,27 @@ export interface IOptions {
   retryTimes?: number;
   defaultCdns?: PropertyCdn[];
 }
+export const libName = "package/vite-add-cdn-script/test";
 
+// 打印控制器
+const consoleManage = new ConsoleManage();
 /**
  *  获取cdn地址
  */
-async function findUrls({ external, packageData, customScript, defaultCdns }) {
+async function findUrls({
+  external,
+  packageData,
+  customScript,
+  defaultCdns,
+}: {
+  external: string[];
+  packageData: {
+    devDependencies?: Record<string, string>;
+    dependencies: Record<string, string>;
+  };
+  customScript: { [key: string]: string };
+  defaultCdns: PropertyCdn[];
+}) {
   let noVersionPackages = [] as string[];
   let isUpdateCdnCache = false;
   const cdnCache = await getCdnCacheInstance();
@@ -31,20 +48,21 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
   >(
     external.map(async (key) => {
       const version = getPackageVersion(packageData, key);
+
       if (customScript[key]) {
         return {
           urls: [],
           key,
         };
       }
-      const cacheUrls = cdnCache.getCdnCache(key, version);
-      if (!version && !cacheUrls) {
+      if (!version) {
         noVersionPackages.push(key);
         return {
           urls: [],
           key,
         };
       }
+      const cacheUrls = cdnCache.getCdnCache(key, version);
 
       if (cacheUrls) {
         // 命中cdn缓存
@@ -56,12 +74,29 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
         // 未命中cdn缓存
         isUpdateCdnCache = true;
         console.log(`从网络获取${key}${version}的cdn地址`);
+        const packUrlRes = await Promise.allSettled(
+          defaultCdns.map(async (cdn: PropertyCdn) => {
+            return await getPackageURL(key, version, cdn);
+          }),
+        ).then((data) => {
+          return (
+            data.filter((item) => {
+              if (item.status === "fulfilled") {
+                item.value;
+                return true;
+              } else {
+                consoleManage.warn(item.reason.toString());
+              }
+            }) as PromiseFulfilledResult<string>[]
+          ).map((item: PromiseFulfilledResult<string>) => {
+            return item.value;
+          });
+        });
+        if (packUrlRes.length === 0) {
+          throw new Error(`获取${key} ${version}的cdn地址失败`);
+        }
         const res = {
-          urls: await Promise.all(
-            defaultCdns.map(async (cdn) => {
-              return await getPackageURL(key, version, cdn);
-            }),
-          ),
+          urls: packUrlRes,
           key,
         };
         cdnCache.setCdnCache(key, version, res.urls);
@@ -80,11 +115,11 @@ async function findUrls({ external, packageData, customScript, defaultCdns }) {
 }
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
-  const { customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
-  let _config;
+  const { customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg", "cdnjs"] } = opt;
+  let _config: UserConfig;
 
   return {
-    name: "vite-add-cdn-script",
+    name: libName,
     enforce: EEnforce.PRE,
     apply: "build",
     config(confing) {
@@ -96,8 +131,20 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       try {
         const packageJson = fs.readFileSync(packageJsonPath, "utf-8");
         const packageData = JSON.parse(packageJson);
-        const external = _config.build.rollupOptions.external;
-        const packNameUrl: { [k in PropertyCdn]?: string[] } = {};
+        const inputExternal = _config.build?.rollupOptions?.external;
+        if (!inputExternal) {
+          return html;
+        }
+        let external: string[] = [];
+        if (typeof inputExternal === "string") {
+          external = [inputExternal];
+        } else if (Array.isArray(inputExternal)) {
+          external = inputExternal.filter((item) => typeof item === "string");
+        } else if (typeof inputExternal === "object") {
+          return html;
+        }
+
+        const packNameUrl: { [k in string]?: string[] } = {};
 
         let script = "";
         const { urls: urlListRes, noVersionPackages } = await findUrls({
@@ -113,7 +160,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
               [key: string]: string;
             };
           } = { dependencies: {} };
-          await Promise.all(
+          await Promise.allSettled(
             urlListRes.map(async (item) => {
               if (!item) return;
               const { key, urls } = item;
@@ -123,8 +170,13 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
               const packageJson = await getPackageJsonByUrl(findPackageJsonUrl);
               composeVersionObj(urlPackageJsonRes.dependencies, packageJson.dependencies);
             }),
-          );
-          // findUrls中会进行未找到版本的库的中断报错处理
+          ).then((data) => {
+            data.forEach((item) => {
+              if (item.status === "rejected") {
+                consoleManage.warn(item.reason.toString());
+              }
+            });
+          });
           const { urls: noPackageUrls, noVersionPackages: notFindPackages } = await findUrls({
             external: noVersionPackages,
             packageData: urlPackageJsonRes,
@@ -143,6 +195,9 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
             throw new Error(`找不到${notFindPackages.join(",")}的版本`);
           }
         }
+
+        consoleManage.consoleAll();
+
         urlListRes.forEach((element) => {
           if (!element) return;
           const { urls, key } = element;
@@ -182,7 +237,9 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
 
         return html;
       } catch (error) {
-        console.error("获取dependencies出错:", error);
+        consoleManage.consoleAll();
+        console.error("vite-add-cdn-script error:", (error as Error).message);
+        process.exit(1);
       }
     },
   };

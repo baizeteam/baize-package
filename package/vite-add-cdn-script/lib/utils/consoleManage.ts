@@ -1,3 +1,5 @@
+import { libName } from "../main";
+
 // 打印类型
 export enum ConsoleType {
   log = "log",
@@ -9,31 +11,31 @@ export enum ConsoleType {
 // 全局打印处理
 export default class ConsoleManage {
   // 打印记录
-  private static logList: {
+  private logList: {
     type: `${ConsoleType}`;
     message: string;
   }[] = [];
 
   // 打印方法
-  public static log(message: string) {
+  public log(message: string) {
     this.logList.push({
       type: "log",
       message,
     });
   }
-  public static warn(message: string) {
+  public warn(message: string) {
     this.logList.push({
       type: "warn",
       message,
     });
   }
-  public static error(message: string) {
+  public error(message: string) {
     this.logList.push({
       type: "error",
       message,
     });
   }
-  public static info(message: string) {
+  public info(message: string) {
     this.logList.push({
       type: "info",
       message,
@@ -41,14 +43,14 @@ export default class ConsoleManage {
   }
 
   // 打印全部
-  public static consoleAll() {
+  public consoleAll() {
     this.logList.forEach((item) => {
-      console[item.type](item.message);
+      console[item.type](`${libName} ${item.message}`);
     });
   }
 
   // 清除打印记录
-  public static clear() {
+  public clear() {
     this.logList = [];
   }
 }

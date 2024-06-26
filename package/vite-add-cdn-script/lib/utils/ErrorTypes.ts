@@ -25,7 +25,7 @@ export class PackageNetworkError extends NetworkError {
  */
 export class NoVersionError extends Error {
   constructor({ packageName, version, cdn }: { packageName: string; version: string; cdn: PropertyCdn }) {
-    super(`找不到${cdn} ${packageName}@${version}的版本`);
+    super(`${cdn}上没有${packageName}@${version}的版本`);
     this.name = "NoVersionError";
   }
 }

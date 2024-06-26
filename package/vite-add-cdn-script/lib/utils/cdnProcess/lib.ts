@@ -23,17 +23,21 @@ export type CdnUrlGeterrObj = {
  *  获取package.json中的依赖版本
  */
 export const getPackageJsonByUrl = async (url: string) => {
-  const packUrlRex = /^(https?:\/\/.*\d+\.\d+\.\d+\/).+?\.js$/;
-  if (packUrlRex.test(url)) {
-    const packageJsonUrl = url.replace(packUrlRex, (_: string, suffix: string) => {
-      return `${suffix}package.json`;
-    });
-    return await req.get<{
-      devDependencies: Record<string, string>;
-      dependencies: Record<string, string>;
-    }>(packageJsonUrl);
-  } else {
-    throw new Error(`${url} 不是正确的url`);
+  try {
+    const packUrlRex = /^(https?:\/\/.*\d+\.\d+\.\d+\/).+?\.js$/;
+    if (packUrlRex.test(url)) {
+      const packageJsonUrl = url.replace(packUrlRex, (_: string, suffix: string) => {
+        return `${suffix}package.json`;
+      });
+      return await req.get<{
+        devDependencies: Record<string, string>;
+        dependencies: Record<string, string>;
+      }>(packageJsonUrl);
+    } else {
+      throw new Error(`${url} 不是正确的url`);
+    }
+  } catch (error) {
+    throw error;
   }
 };
 
@@ -45,7 +49,7 @@ export const getPackageJsonByUrl = async (url: string) => {
  */
 export const getPackageVersion = (
   packageJson: {
-    devDependencies: Record<string, string>;
+    devDependencies?: Record<string, string>;
     dependencies: Record<string, string>;
   },
   key: string,

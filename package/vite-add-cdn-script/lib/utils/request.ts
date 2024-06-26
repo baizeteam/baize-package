@@ -94,7 +94,6 @@ const req = {
         throw new NetworkError(`请求失败，状态码：${res.status}`);
       }
     } catch (error) {
-      console.log("🍞 ~ error:", error);
       throw new NetworkError((error as Error).message);
     }
   },
