@@ -15,7 +15,7 @@ export interface IOptions {
   retryTimes?: number;
   defaultCdns?: PropertyCdn[];
 }
-export const libName = "package/vite-add-cdn-script/test";
+export const libName = "vite-add-cdn-script";
 
 // 打印控制器
 const consoleManage = new ConsoleManage();
