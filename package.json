@@ -5,6 +5,16 @@
   "description": "baize vite plugin monorepo",
   "author": "baizeteam",
   "type": "module",
+  "packageManager": "pnpm@8.15.6",
   "scripts": {
-  }
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.5"
+  },
+  "workspaces": [
+    "vite-add-cdn-script/*",
+    "vite-react-stylename/*"
+  ]
 }
