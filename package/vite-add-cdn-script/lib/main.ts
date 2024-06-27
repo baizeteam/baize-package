@@ -115,7 +115,7 @@ async function findUrls({
 }
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
-  const { customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg", "cdnjs"] } = opt;
+  const { customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
   let _config: UserConfig;
 
   return {
