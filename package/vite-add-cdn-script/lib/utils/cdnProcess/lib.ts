@@ -1,4 +1,5 @@
 import { PropertyCdn } from "../../types";
+import { GetFileListError } from "../ErrorTypes";
 import req from "../request";
 import bootcdnProcess from "./bootcdn";
 import cdnjsProcess from "./cdnjs";
@@ -9,6 +10,7 @@ export type FileNameRes = {
   fileList: {
     name: string;
   }[];
+  version: string;
   recommendFileName?: string;
 };
 
@@ -21,14 +23,21 @@ export type CdnUrlGeterrObj = {
  *  获取package.json中的依赖版本
  */
 export const getPackageJsonByUrl = async (url: string) => {
-  const packUrlRex = /^(https?:\/\/.*\d+\.\d+\.\d+\/).+?\.js$/;
-  if (packUrlRex.test(url)) {
-    const packageJsonUrl = url.replace(packUrlRex, (_: string, suffix: string) => {
-      return `${suffix}package.json`;
-    });
-    return JSON.parse(await req.get(packageJsonUrl));
-  } else {
-    throw new Error(`${url} 不是正确的url`);
+  try {
+    const packUrlRex = /^(https?:\/\/.*\d+\.\d+\.\d+\/).+?\.js$/;
+    if (packUrlRex.test(url)) {
+      const packageJsonUrl = url.replace(packUrlRex, (_: string, suffix: string) => {
+        return `${suffix}package.json`;
+      });
+      return await req.get<{
+        devDependencies: Record<string, string>;
+        dependencies: Record<string, string>;
+      }>(packageJsonUrl);
+    } else {
+      throw new Error(`${url} 不是正确的url`);
+    }
+  } catch (error) {
+    throw error;
   }
 };
 
@@ -40,7 +49,7 @@ export const getPackageJsonByUrl = async (url: string) => {
  */
 export const getPackageVersion = (
   packageJson: {
-    devDependencies: Record<string, string>;
+    devDependencies?: Record<string, string>;
     dependencies: Record<string, string>;
   },
   key: string,
@@ -60,20 +69,22 @@ export const getPackageVersion = (
  */
 export const getPackageURL = async (packageName: string, version: string, cdn: PropertyCdn) => {
   // 再这一步做分离是为了之后可能做 @ ~ 等符号的处理,🤔每个cdn的具体方案可能不同
-  const confirmVersion = version.match(/\d+(.\d+)?(.\d+)?/)?.[0];
+  const confirmVersion = version.match(/\d+(.\d+)?(.\d+)?/);
   if (!confirmVersion) {
     throw new Error(`${packageName} version ${version} is not valid`);
   }
 
-  const res = await cdnUrlGeterr[cdn].getFileList(packageName, confirmVersion).catch(() => {
-    throw new Error(`${packageName} ${version} ${cdn} API 请求失败`);
-  });
+  const res = await cdnUrlGeterr[cdn].getFileList(packageName, version);
 
   const fileName = getPackageFile(res, packageName);
   if (!fileName) {
-    throw new Error(`在 ${cdn} 中找不到 ${packageName}@${confirmVersion} 文件，请检查包名或版本号`);
+    throw new GetFileListError({
+      packageName,
+      version,
+      cdn,
+    });
   }
-  return cdnUrlGeterr[cdn].getUrl(packageName, confirmVersion, fileName);
+  return cdnUrlGeterr[cdn].getUrl(packageName, res.version, fileName);
 };
 
 /**

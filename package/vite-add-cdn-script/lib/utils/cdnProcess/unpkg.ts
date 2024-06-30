@@ -1,4 +1,5 @@
-import req from "../request";
+import { NetworkError, NoVersionError, PackageNetworkError } from "../ErrorTypes";
+import req, { followRedirect } from "../request";
 import { CdnUrlGeterrObj, FileNameRes } from "./lib";
 
 export type unpkyDirectory = {
@@ -27,27 +28,40 @@ export const unpkgDirectoryHandle = (res: (unpkyDirectory | unpkgFiles)[]) => {
     return pre;
   }, [] as FileNameRes["fileList"]);
 };
+async function getFileList(packageName: string, version: string) {
+  try {
+    // unpkg 重定向到正确的包版本
+    const redirectRes = await followRedirect(`https://unpkg.com/${packageName}@${version}/?meta`);
+    const versionRes = redirectRes.match(/(?<=@)\d+\.\d+\.\d+(?=\/\?meta)/)?.[0];
+    if (versionRes) {
+      const res = await req.get<unpkgRes>(`https://unpkg.com/${packageName}@${versionRes}/?meta`);
+      return { fileList: unpkgDirectoryHandle(res.files || []), version: versionRes };
+    } else {
+      throw new NoVersionError({
+        packageName,
+        version,
+        cdn: "unpkg",
+      });
+    }
+  } catch (error) {
+    if (error instanceof NetworkError) {
+      throw new PackageNetworkError({
+        packageName,
+        version,
+        cdn: "unpkg",
+      });
+    }
+    throw error;
+  }
+}
+function getUrl(packageName: string, version: string, fileName: string) {
+  // unpkg.com/:package@:version/:file
+  return `https://unpkg.com/${packageName}@${version}${fileName}`;
+}
 
 const unpkgProcess: CdnUrlGeterrObj = {
-  getFileList: (packageName: string, version: string) => {
-    // unpkg.com/react@18.3.1/?meta
-    return new Promise<FileNameRes>((resolve, reject) => {
-      req.get(
-        `https://unpkg.com/${packageName}@${version}/?meta`,
-        (data: string) => {
-          const res: unpkgRes = JSON.parse(data);
-          resolve({ fileList: unpkgDirectoryHandle(res.files || []) });
-        },
-        (e: unknown) => {
-          reject(e);
-        },
-      );
-    });
-  },
-  getUrl: (packageName: string, version: string, fileName: string) => {
-    // unpkg.com/:package@:version/:file
-    return `https://unpkg.com/${packageName}@${version}${fileName}`;
-  },
+  getFileList,
+  getUrl,
 };
 
 export default unpkgProcess;

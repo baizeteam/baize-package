@@ -1,6 +1,5 @@
-import https from "https";
-import http from "http";
-
+import fetch from "node-fetch";
+import { NetworkError } from "./ErrorTypes";
 /**
  * 封装axios并发请求数
  */
@@ -67,31 +66,36 @@ export class LimitPromise {
 }
 const limitReq = new LimitPromise(5);
 
+export const followRedirect = async (url: string): Promise<string> => {
+  try {
+    const res = await fetch(url, { method: "HEAD", redirect: "manual" });
+    if (res.status >= 300 && res.status < 400) {
+      return await followRedirect(res.headers.get("location") || "");
+    }
+    return url;
+  } catch (error) {
+    throw Promise.reject(new NetworkError((error as Error).message));
+  }
+};
 const req = {
   //get请求封装
-  get: (link: string | URL | https.RequestOptions, callback?: (html: string) => void, fail?: (e: any) => void) => {
-    return new Promise<string>((resolve, reject) => {
-      try {
-        https
-          .get(link, (req: http.IncomingMessage) => {
-            let html = "";
-            req.on("data", (data) => {
-              html += data;
-            });
-            req.on("end", () => {
-              callback?.(html);
-              resolve(html);
-            });
-          })
-          .on("error", function (error) {
-            fail?.(error);
-            reject(error);
-          });
-      } catch (error) {
-        fail?.(error);
-        reject(error);
+  get: async <T>(link: string): Promise<T> => {
+    try {
+      const res = await fetch(link);
+      if (res.ok) {
+        const contentType = res.headers.get("content-type");
+        const text = await res.text();
+        if (contentType && contentType.includes("application/json")) {
+          return JSON.parse(text);
+        } else {
+          return text as T;
+        }
+      } else {
+        throw new NetworkError(`请求失败，状态码：${res.status}`);
       }
-    });
+    } catch (error) {
+      throw new NetworkError((error as Error).message);
+    }
   },
 };
 
