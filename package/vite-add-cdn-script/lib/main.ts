@@ -139,7 +139,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         if (typeof inputExternal === "string") {
           external = [inputExternal];
         } else if (Array.isArray(inputExternal)) {
-          external = inputExternal.filter((item) => typeof item === "string");
+          external = inputExternal.filter((item) => typeof item === "string") as string[];
         } else if (typeof inputExternal === "object") {
           return html;
         }
