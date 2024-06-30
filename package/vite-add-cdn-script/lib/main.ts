@@ -115,7 +115,7 @@ async function findUrls({
 }
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
-  const { customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
+  const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
   let _config: UserConfig;
 
   return {
@@ -213,12 +213,12 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         function errorCDN(e) {
           const packNameUrl = JSON.parse('${JSON.stringify(packNameUrl)}');
           const nextCur = parseInt(e.getAttribute("data-cur")) + 1;
-          if(nextCur>${retryTimes}){return;}
           
           const key = e.getAttribute("data-key");
-          if(nextCur>=packNameUrl[key].length){return;}
+          const curPackNameUrl = packNameUrl[key]
+          if(nextCur>=curPackNameUrl.length){return;}
           // 新的cdn链接
-          const url = packNameUrl[key][nextCur]
+          const url = curPackNameUrl[nextCur]
           // 克隆原标签
           const tagName = e.tagName
           const cdnDOM = document.createElement(tagName);
