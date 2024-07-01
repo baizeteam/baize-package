@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - feature/rename
+      - release
 
 jobs:
   release:
@@ -32,4 +32,4 @@ jobs:
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm changeset -r --no-git-checks
+        run: pnpm changeset publish -r
