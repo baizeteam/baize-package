@@ -7,6 +7,9 @@ import { resolve } from "path";
 const generateScopedName = genericNames("[name]__[local]__[hash:base64:4]");
 
 export default defineConfig({
+  server: {
+    port: 6102,
+  },
   plugins: [
     react(),
     viteReactStyleName({
