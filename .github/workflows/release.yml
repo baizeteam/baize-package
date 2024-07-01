@@ -30,9 +30,9 @@ jobs:
         run: pnpm run build
 
       - name: Authenticate with npm registry
-        run: pnpm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
+        run: npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
 
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm changeset publish -r
+        run: npm changeset publish -r
