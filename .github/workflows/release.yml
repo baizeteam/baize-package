@@ -32,4 +32,4 @@ jobs:
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm changeset -r
+        run: pnpm changeset -r --no-git-checks

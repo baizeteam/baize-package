@@ -14,7 +14,7 @@
     "type": "git",
     "url": "git+https://github.com/baizeteam/baize-package.git"
   },
-  "homepage": "https://github.com/baizeteam/baize-package/tree/master/package/vite-react-stylename#readme",
+  "homepage": "https://github.com/baizeteam/baize-package/tree/release/package/vite-react-stylename#readme",
   "author": "baizeteam",
   "type": "module",
   "files": [

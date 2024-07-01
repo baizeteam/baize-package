@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git+https://github.com/baizeteam/baize-package.git"
   },
-  "homepage": "https://github.com/baizeteam/baize-package/tree/master/package/vite-add-cdn-script#readme",
+  "homepage": "https://github.com/baizeteam/baize-package/tree/release/package/vite-add-cdn-script#readme",
   "author": "baizeteam",
   "type": "module",
   "files": [
