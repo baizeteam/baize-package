@@ -9,7 +9,7 @@ export enum ConsoleType {
 }
 
 // 全局打印处理
-export default class ConsoleManage {
+export class ConsoleManage {
   // 打印记录
   private logList: {
     type: `${ConsoleType}`;

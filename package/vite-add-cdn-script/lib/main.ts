@@ -1,9 +1,15 @@
 import path from "path";
 import fs from "fs";
 import { PluginOption, UserConfig } from "vite";
-import { composeVersionObj, getCdnCacheInstance, getPackageJsonByUrl, getPackageURL, getPackageVersion } from "./utils";
+import {
+  composeVersionObj,
+  getCdnCacheInstance,
+  getPackageJsonByUrl,
+  getPackageURL,
+  getPackageVersion,
+  ConsoleManage,
+} from "./utils";
 import { PropertyCdn } from "./types";
-import ConsoleManage from "./utils/consoleManage";
 
 enum EEnforce {
   PRE = "pre",
@@ -18,7 +24,7 @@ export interface IOptions {
 export const libName = "vite-add-cdn-script";
 
 // 打印控制器
-const consoleManage = new ConsoleManage();
+let consoleManage: ConsoleManage;
 /**
  *  获取cdn地址
  */
@@ -127,6 +133,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
     },
     async transformIndexHtml(html) {
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
+      consoleManage = new ConsoleManage();
       const packageJsonPath = path.resolve(process.cwd(), "package.json");
       try {
         const packageJson = fs.readFileSync(packageJsonPath, "utf-8");
@@ -139,7 +146,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         if (typeof inputExternal === "string") {
           external = [inputExternal];
         } else if (Array.isArray(inputExternal)) {
-          external = inputExternal.filter((item) => typeof item === "string");
+          external = inputExternal.filter((item) => typeof item === "string") as string[];
         } else if (typeof inputExternal === "object") {
           return html;
         }
