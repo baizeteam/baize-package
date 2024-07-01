@@ -1,8 +1,8 @@
 {
-  "name": "baize-vite-plugin",
+  "name": "baize-package",
   "version": "1.0.0",
   "private": true,
-  "description": "baize vite plugin monorepo",
+  "description": "baize package monorepo",
   "author": "baizeteam",
   "type": "module",
   "packageManager": "pnpm@9.0.0",
