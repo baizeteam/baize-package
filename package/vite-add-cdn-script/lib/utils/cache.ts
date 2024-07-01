@@ -1,19 +1,27 @@
 import path from "path";
 
 import fs from "fs";
+import { PropertyCdn } from "../types";
+
+export type CacheFileType = {
+  [packageName: string]: {
+    [version: string]: CacheCellType[];
+  };
+};
+export type CacheCellType = {
+  cdnName: PropertyCdn;
+  url: string;
+};
+
 /**
  * 本地缓存控制类
  */
 class CdnCache {
-  private cdnCache: {
-    [packageName: string]: {
-      [version: string]: string[];
-    };
-  } = {};
+  private cdnCache: CacheFileType = {};
   private cdnCachePath: string = "";
   constructor() {
     // cdn缓存文件
-    this.cdnCachePath = path.resolve(process.cwd(), "./.cdn-cache.json");
+    this.cdnCachePath = path.resolve(process.cwd(), "./.cdn-cache-v2.json");
   }
 
   // 初始化cdn缓存
@@ -34,7 +42,7 @@ class CdnCache {
    * @param packageName  包名
    * @param version   版本
    */
-  getCdnCache(packageName: string, version: string): string[] | undefined {
+  getCdnCache(packageName: string, version: string): CacheCellType[] | undefined {
     return this.cdnCache[packageName]?.[version];
   }
   /**
@@ -43,12 +51,12 @@ class CdnCache {
    * @param version   版本
    * @param urls  地址列表
    */
-  setCdnCache(packageName: string, version: string, urls: string[]) {
+  setCdnCache(packageName: string, version: string, cdnData: CacheCellType[]) {
     if (this.cdnCache[packageName]) {
-      this.cdnCache[packageName][version] = urls;
+      this.cdnCache[packageName][version] = cdnData;
     } else {
       this.cdnCache[packageName] = {
-        [version]: urls,
+        [version]: cdnData,
       };
     }
   }

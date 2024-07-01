@@ -1,4 +1,4 @@
-import ConsoleManage from "../lib/utils/consoleManage";
+import { ConsoleManage } from "../lib/utils/consoleManage";
 import { describe, expect, it, jest, beforeEach, afterEach } from "@jest/globals";
 
 describe("consoleManage", () => {

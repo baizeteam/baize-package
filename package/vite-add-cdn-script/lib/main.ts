@@ -1,9 +1,16 @@
 import path from "path";
 import fs from "fs";
 import { PluginOption, UserConfig } from "vite";
-import { composeVersionObj, getCdnCacheInstance, getPackageJsonByUrl, getPackageURL, getPackageVersion } from "./utils";
+import {
+  CacheCellType,
+  composeVersionObj,
+  getCdnCacheInstance,
+  getPackageJsonByUrl,
+  getPackageURL,
+  getPackageVersion,
+} from "./utils";
 import { PropertyCdn } from "./types";
-import ConsoleManage from "./utils/consoleManage";
+import { ConsoleManage } from "./utils/consoleManage";
 
 enum EEnforce {
   PRE = "pre",
@@ -67,28 +74,30 @@ async function findUrls({
       if (cacheUrls) {
         // 命中cdn缓存
         return {
-          urls: cacheUrls,
+          urls: cacheUrls.filter((item) => defaultCdns.includes(item.cdnName)).map((item) => item.url),
           key,
         };
       } else {
         // 未命中cdn缓存
         isUpdateCdnCache = true;
         console.log(`从网络获取${key}${version}的cdn地址`);
-        const packUrlRes = await Promise.allSettled(
-          defaultCdns.map(async (cdn: PropertyCdn) => {
-            return await getPackageURL(key, version, cdn);
+        const packUrlRes = await Promise.allSettled<CacheCellType>(
+          defaultCdns.map(async (cdnName: PropertyCdn) => {
+            return {
+              cdnName,
+              url: await getPackageURL(key, version, cdnName),
+            };
           }),
         ).then((data) => {
           return (
             data.filter((item) => {
               if (item.status === "fulfilled") {
-                item.value;
                 return true;
               } else {
                 consoleManage.warn(item.reason.toString());
               }
-            }) as PromiseFulfilledResult<string>[]
-          ).map((item: PromiseFulfilledResult<string>) => {
+            }) as PromiseFulfilledResult<CacheCellType>[]
+          ).map((item: PromiseFulfilledResult<CacheCellType>) => {
             return item.value;
           });
         });
@@ -96,10 +105,10 @@ async function findUrls({
           throw new Error(`获取${key} ${version}的cdn地址失败`);
         }
         const res = {
-          urls: packUrlRes,
+          urls: packUrlRes.map((item) => item.url),
           key,
         };
-        cdnCache.setCdnCache(key, version, res.urls);
+        cdnCache.setCdnCache(key, version, packUrlRes);
         return res;
       }
     }),
@@ -139,7 +148,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         if (typeof inputExternal === "string") {
           external = [inputExternal];
         } else if (Array.isArray(inputExternal)) {
-          external = inputExternal.filter((item) => typeof item === "string");
+          external = inputExternal.filter((item) => typeof item === "string") as string[];
         } else if (typeof inputExternal === "object") {
           return html;
         }
