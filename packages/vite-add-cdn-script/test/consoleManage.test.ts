@@ -1,5 +1,6 @@
-import { ConsoleManage } from "../lib/utils/consoleManage";
 import { describe, expect, it, jest, beforeEach, afterEach } from "@jest/globals";
+import { ConsoleManage } from "../lib/utils";
+import { libName } from "../lib/main";
 
 describe("consoleManage", () => {
   const consoleManage = new ConsoleManage();
@@ -18,25 +19,25 @@ describe("consoleManage", () => {
   it("should log messages", () => {
     consoleManage.log("test log");
     consoleManage.consoleAll();
-    expect(console.log).toHaveBeenCalledWith("test log");
+    expect(console.log).toHaveBeenCalledWith(libName + " test log");
   });
 
   it("should warn messages", () => {
     consoleManage.warn("test warn");
     consoleManage.consoleAll();
-    expect(console.warn).toHaveBeenCalledWith("test warn");
+    expect(console.warn).toHaveBeenCalledWith(libName + " test warn");
   });
 
   it("should error messages", () => {
     consoleManage.error("test error");
     consoleManage.consoleAll();
-    expect(console.error).toHaveBeenCalledWith("test error");
+    expect(console.error).toHaveBeenCalledWith(libName + " test error");
   });
 
   it("should info messages", () => {
     consoleManage.info("test info");
     consoleManage.consoleAll();
-    expect(console.info).toHaveBeenCalledWith("test info");
+    expect(console.info).toHaveBeenCalledWith(libName + " test info");
   });
 
   it("should clear messages", () => {

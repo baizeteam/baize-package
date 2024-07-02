@@ -2,15 +2,15 @@ import path from "path";
 import fs from "fs";
 import { PluginOption, UserConfig } from "vite";
 import {
-  CacheCellType,
   composeVersionObj,
   getCdnCacheInstance,
   getPackageJsonByUrl,
   getPackageURL,
   getPackageVersion,
+  ConsoleManage,
+  CacheCellType,
 } from "./utils";
 import { PropertyCdn } from "./types";
-import { ConsoleManage } from "./utils/consoleManage";
 
 enum EEnforce {
   PRE = "pre",
@@ -25,7 +25,7 @@ export interface IOptions {
 export const libName = "vite-add-cdn-script";
 
 // 打印控制器
-const consoleManage = new ConsoleManage();
+let consoleManage: ConsoleManage;
 /**
  *  获取cdn地址
  */
@@ -124,7 +124,7 @@ async function findUrls({
 }
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
-  const { customScript = {}, retryTimes = 1, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
+  const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
   let _config: UserConfig;
 
   return {
@@ -136,6 +136,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
     },
     async transformIndexHtml(html) {
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
+      consoleManage = new ConsoleManage();
       const packageJsonPath = path.resolve(process.cwd(), "package.json");
       try {
         const packageJson = fs.readFileSync(packageJsonPath, "utf-8");
@@ -222,12 +223,12 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
         function errorCDN(e) {
           const packNameUrl = JSON.parse('${JSON.stringify(packNameUrl)}');
           const nextCur = parseInt(e.getAttribute("data-cur")) + 1;
-          if(nextCur>${retryTimes}){return;}
           
           const key = e.getAttribute("data-key");
-          if(nextCur>=packNameUrl[key].length){return;}
+          const curPackNameUrl = packNameUrl[key]
+          if(nextCur>=curPackNameUrl.length){return;}
           // 新的cdn链接
-          const url = packNameUrl[key][nextCur]
+          const url = curPackNameUrl[nextCur]
           // 克隆原标签
           const tagName = e.tagName
           const cdnDOM = document.createElement(tagName);

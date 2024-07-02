@@ -13,6 +13,9 @@ const externals = {
 };
 
 const pageConfig = {
+  server: {
+    port: 6101,
+  },
   plugins: [react(), viteAddCdnScript({})],
   base: "./",
   build: {
