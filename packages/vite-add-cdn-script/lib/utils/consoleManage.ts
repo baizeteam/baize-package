@@ -44,6 +44,8 @@ export class ConsoleManage {
 
   // 打印全部
   public consoleAll() {
+    // 跟打印内容之间加一个空行
+    console.log("");
     this.logList.forEach((item) => {
       console[item.type](`${libName} ${item.message}`);
     });

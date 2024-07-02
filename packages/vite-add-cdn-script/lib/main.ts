@@ -11,6 +11,7 @@ import {
   CacheCellType,
 } from "./utils";
 import { PropertyCdn } from "./types";
+import { NoVersionError } from "./utils/ErrorTypes";
 
 enum EEnforce {
   PRE = "pre",
@@ -73,8 +74,40 @@ async function findUrls({
 
       if (cacheUrls) {
         // 命中cdn缓存
+        const cloneDefaultCdns = new Set(defaultCdns);
+        const urls = cacheUrls
+          .filter((item) => {
+            if (cloneDefaultCdns.has(item.cdnName)) {
+              cloneDefaultCdns.delete(item.cdnName);
+              return true;
+            }
+          })
+          .map((item) => item.url);
+        if (cloneDefaultCdns.size > 0) {
+          const noMatchCdnRes = await Promise.allSettled<CacheCellType>(
+            [...cloneDefaultCdns].map(async (cdnName: PropertyCdn) => {
+              return {
+                cdnName,
+                url: await getPackageURL(key, version, cdnName),
+              };
+            }),
+          ).then((data) => {
+            return data.filter((item) => {
+              if (item.status === "fulfilled") {
+                urls.push(item.value.url);
+                return true;
+              } else {
+                consoleManage.warn(item.reason.toString());
+              }
+            }) as PromiseFulfilledResult<CacheCellType>[];
+          });
+          if (noMatchCdnRes.length > 0) {
+            cacheUrls.push(...noMatchCdnRes.map((item) => item.value));
+            isUpdateCdnCache = true;
+          }
+        }
         return {
-          urls: cacheUrls.filter((item) => defaultCdns.includes(item.cdnName)).map((item) => item.url),
+          urls,
           key,
         };
       } else {
