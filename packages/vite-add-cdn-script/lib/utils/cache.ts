@@ -8,10 +8,22 @@ export type CacheFileType = {
     [version: string]: CacheCellType[];
   };
 };
-export type CacheCellType = {
+export enum CdnErrorType {
+  noFound = "noFound",
+  NetworkError = "networkError",
+}
+export type successCacheCellType = {
   cdnName: PropertyCdn;
   url: string;
+  success: true;
 };
+
+export type failCacheCellType = {
+  cdnName: PropertyCdn;
+  success: false;
+  error: CdnErrorType;
+};
+export type CacheCellType = successCacheCellType | failCacheCellType;
 
 /**
  * 本地缓存控制类

@@ -9,9 +9,12 @@ import {
   getPackageVersion,
   ConsoleManage,
   CacheCellType,
+  CdnErrorType,
+  successCacheCellType,
+  failCacheCellType,
 } from "./utils";
 import { PropertyCdn } from "./types";
-import { NoVersionError } from "./utils/ErrorTypes";
+import { NetworkError, NoVersionError, PackageNetworkError } from "./utils/ErrorTypes";
 
 enum EEnforce {
   PRE = "pre",
@@ -77,24 +80,27 @@ async function findUrls({
         const cloneDefaultCdns = new Set(defaultCdns);
         const urls = cacheUrls
           .filter((item) => {
-            if (cloneDefaultCdns.has(item.cdnName)) {
+            if (cloneDefaultCdns.has(item.cdnName) && item.success) {
               cloneDefaultCdns.delete(item.cdnName);
               return true;
+            } else if (!item.success && item.error === CdnErrorType.noFound) {
+              cloneDefaultCdns.delete(item.cdnName);
             }
           })
-          .map((item) => item.url);
+          .map((item) => (item as successCacheCellType).url);
         if (cloneDefaultCdns.size > 0) {
           const noMatchCdnRes = await Promise.allSettled<CacheCellType>(
             [...cloneDefaultCdns].map(async (cdnName: PropertyCdn) => {
               return {
                 cdnName,
+                success: true,
                 url: await getPackageURL(key, version, cdnName),
               };
             }),
           ).then((data) => {
             return data.filter((item) => {
               if (item.status === "fulfilled") {
-                urls.push(item.value.url);
+                urls.push((item.value as successCacheCellType).url);
                 return true;
               } else {
                 consoleManage.warn(item.reason.toString());
@@ -118,27 +124,34 @@ async function findUrls({
           defaultCdns.map(async (cdnName: PropertyCdn) => {
             return {
               cdnName,
+              success: true,
               url: await getPackageURL(key, version, cdnName),
             };
           }),
         ).then((data) => {
-          return (
-            data.filter((item) => {
+          return data
+            .map((item) => {
               if (item.status === "fulfilled") {
-                return true;
+                return item.value;
               } else {
                 consoleManage.warn(item.reason.toString());
+                if (item.reason instanceof PackageNetworkError || item.reason instanceof NoVersionError) {
+                  return {
+                    cdnName: item.reason.cdn,
+                    success: false,
+                    error:
+                      item.reason instanceof PackageNetworkError ? CdnErrorType.NetworkError : CdnErrorType.noFound,
+                  } satisfies failCacheCellType;
+                }
               }
-            }) as PromiseFulfilledResult<CacheCellType>[]
-          ).map((item: PromiseFulfilledResult<CacheCellType>) => {
-            return item.value;
-          });
+            })
+            .filter((e) => !!e);
         });
         if (packUrlRes.length === 0) {
           throw new Error(`获取${key} ${version}的cdn地址失败`);
         }
         const res = {
-          urls: packUrlRes.map((item) => item.url),
+          urls: packUrlRes.filter((item) => item.success).map((item) => item.url),
           key,
         };
         cdnCache.setCdnCache(key, version, packUrlRes);
