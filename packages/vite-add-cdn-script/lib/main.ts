@@ -78,13 +78,16 @@ async function findUrls({
       if (cacheUrls) {
         // 命中cdn缓存
         const cloneDefaultCdns = new Set(defaultCdns);
+        const networkCdnMap = new Map<PropertyCdn, number>();
         const urls = cacheUrls
-          .filter((item) => {
+          .filter((item, index) => {
             if (cloneDefaultCdns.has(item.cdnName) && item.success) {
               cloneDefaultCdns.delete(item.cdnName);
               return true;
             } else if (!item.success && item.error === CdnErrorType.noFound) {
               cloneDefaultCdns.delete(item.cdnName);
+            } else {
+              networkCdnMap.set(item.cdnName, index);
             }
           })
           .map((item) => (item as successCacheCellType).url);
@@ -108,7 +111,15 @@ async function findUrls({
             }) as PromiseFulfilledResult<CacheCellType>[];
           });
           if (noMatchCdnRes.length > 0) {
-            cacheUrls.push(...noMatchCdnRes.map((item) => item.value));
+            noMatchCdnRes.forEach((item) => {
+              const index = networkCdnMap.get(item.value.cdnName);
+              if (index !== undefined) {
+                cacheUrls[index] = item.value;
+              } else {
+                cacheUrls.push(item.value);
+              }
+            });
+
             isUpdateCdnCache = true;
           }
         }

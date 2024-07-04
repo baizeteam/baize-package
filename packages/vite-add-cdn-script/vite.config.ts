@@ -6,6 +6,10 @@ import viteAddCdnScript from "./lib/main";
 
 const externals = {
   react: "React",
+  "react-dom": "ReactDOM",
+  "@remix-run/router": "@remix-run/router",
+  "react-router": "react-router",
+  "react-router-dom": "ReactRouterDOM",
 };
 
 const pageConfig = {
