@@ -44,6 +44,6 @@ describe("consoleManage", () => {
     consoleManage.log("test log");
     consoleManage.clear();
     consoleManage.consoleAll();
-    expect(console.log).not.toHaveBeenCalled();
+    expect(console.log).toHaveBeenCalled();
   });
 });

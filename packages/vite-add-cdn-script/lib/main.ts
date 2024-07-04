@@ -14,7 +14,7 @@ import {
   failCacheCellType,
 } from "./utils";
 import { PropertyCdn } from "./types";
-import { NetworkError, NoVersionError, PackageNetworkError } from "./utils/ErrorTypes";
+import { NoVersionError, PackageNetworkError } from "./utils/ErrorTypes";
 
 enum EEnforce {
   PRE = "pre",
@@ -131,7 +131,7 @@ async function findUrls({
         // 未命中cdn缓存
         isUpdateCdnCache = true;
         console.log(`从网络获取${key}${version}的cdn地址`);
-        const packUrlRes = await Promise.allSettled<CacheCellType>(
+        const packUrlRes: CacheCellType[] = await Promise.allSettled<CacheCellType>(
           defaultCdns.map(async (cdnName: PropertyCdn) => {
             return {
               cdnName,
@@ -156,13 +156,15 @@ async function findUrls({
                 }
               }
             })
-            .filter((e) => !!e);
+            .filter((e) => !!e) as CacheCellType[];
         });
         if (packUrlRes.length === 0) {
           throw new Error(`获取${key} ${version}的cdn地址失败`);
         }
         const res = {
-          urls: packUrlRes.filter((item) => item.success).map((item) => item.url),
+          urls: (packUrlRes.filter((item: CacheCellType) => item.success) as successCacheCellType[]).map(
+            (item: successCacheCellType) => item.url,
+          ),
           key,
         };
         cdnCache.setCdnCache(key, version, packUrlRes);
