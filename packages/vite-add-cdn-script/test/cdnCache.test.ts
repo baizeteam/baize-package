@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { CacheCellType, CdnCache } from "../lib/utils/cache";
+import { CacheCellType, CdnCache, Dependencies } from "../lib/utils/cache";
 import fs from "fs";
 
 import path from "path";
@@ -43,5 +43,36 @@ describe("cdn cache test", () => {
   it("save", async () => {
     await cdnCache.save();
     expect(mockFs.__getMockFiles()[cachePath]).toBeDefined();
+  });
+});
+
+describe("packageDependencies", () => {
+  const cdnCache = new CdnCache();
+  it("should get and set package dependencies", () => {
+    const packageName = "example-package";
+    const url = "https://example.com/package.json";
+    const dependencies: Dependencies = {
+      dependencies: {
+        "dependency-1": "^1.0.0",
+        "dependency-2": "^2.0.0",
+      },
+    };
+
+    // Set package dependencies
+    cdnCache.setPackageDependencies(packageName, url, dependencies);
+
+    // Get package dependencies
+    const retrievedDependencies = cdnCache.getPackageDependencies(packageName, url);
+
+    expect(retrievedDependencies).toEqual(dependencies);
+  });
+
+  it("should return undefined for non-existent package dependencies", () => {
+    const packageName = "non-existent-package";
+    const url = "https://example.com/package.json";
+
+    const retrievedDependencies = cdnCache.getPackageDependencies(packageName, url);
+
+    expect(retrievedDependencies).toBeUndefined();
   });
 });

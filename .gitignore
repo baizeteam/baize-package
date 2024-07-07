@@ -12,7 +12,6 @@ dist
 dist-ssr
 dist-page
 .cdn-cache.json
-.cdn-cache-v2.json
 *.local
 .turbo
 
