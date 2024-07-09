@@ -49,7 +49,7 @@ const getFileList = async (packageName: string, version: string) => {
       throw new PackageNetworkError({
         packageName,
         version,
-        cdn: "unpkg",
+        cdn: "bootcdn",
       });
     }
     throw error;

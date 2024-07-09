@@ -71,7 +71,7 @@ async function getFileList(packageName: string, version: string, doubleFind = fa
       throw new PackageNetworkError({
         packageName,
         version,
-        cdn: "unpkg",
+        cdn: "jsdelivr",
       });
     }
     throw error;
@@ -103,7 +103,7 @@ const getSpecifierVersion = async (packageName: string, version: string) => {
       throw new PackageNetworkError({
         packageName,
         version,
-        cdn: "unpkg",
+        cdn: "jsdelivr",
       });
     }
     throw error;

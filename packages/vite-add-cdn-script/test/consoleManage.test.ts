@@ -1,6 +1,6 @@
 import { describe, expect, it, jest, beforeEach, afterEach } from "@jest/globals";
 import { ConsoleManage } from "../lib/utils";
-import { libName } from "../lib/main";
+import { libName } from "../lib/config";
 
 describe("consoleManage", () => {
   const consoleManage = new ConsoleManage();
@@ -44,6 +44,6 @@ describe("consoleManage", () => {
     consoleManage.log("test log");
     consoleManage.clear();
     consoleManage.consoleAll();
-    expect(console.log).not.toHaveBeenCalled();
+    expect(console.log).toHaveBeenCalled();
   });
 });

@@ -14,9 +14,22 @@ export class NetworkError extends Error {
  * 依赖包网络请求失败
  */
 export class PackageNetworkError extends NetworkError {
+  cdn: PropertyCdn;
+  packageName: string;
+  version: string;
   constructor({ packageName, version, cdn }: { packageName: string; version: string; cdn: PropertyCdn }) {
     super(`${cdn} ${packageName}@${version} 网络请求失败`);
     this.name = "PackageNetworkError";
+    this.cdn = cdn;
+    this.packageName = packageName;
+    this.version = version;
+  }
+  getErrorInfo() {
+    return {
+      cdn: this.cdn,
+      packageName: this.packageName,
+      version: this.version,
+    };
   }
 }
 
@@ -24,9 +37,22 @@ export class PackageNetworkError extends NetworkError {
  * 找不到依赖包
  */
 export class NoVersionError extends Error {
+  cdn: PropertyCdn;
+  packageName: string;
+  version: string;
   constructor({ packageName, version, cdn }: { packageName: string; version: string; cdn: PropertyCdn }) {
     super(`${cdn}上没有${packageName}@${version}的版本`);
     this.name = "NoVersionError";
+    this.cdn = cdn;
+    this.packageName = packageName;
+    this.version = version;
+  }
+  getErrorInfo() {
+    return {
+      cdn: this.cdn,
+      packageName: this.packageName,
+      version: this.version,
+    };
   }
 }
 
