@@ -74,7 +74,7 @@ export const followRedirect = async (url: string): Promise<string> => {
     }
     return url;
   } catch (error) {
-    throw Promise.reject(new NetworkError((error as Error).message));
+    throw new NetworkError((error as Error).message);
   }
 };
 const req = {

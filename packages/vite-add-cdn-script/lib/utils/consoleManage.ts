@@ -1,4 +1,4 @@
-import { libName } from "../main";
+import { libName } from "../config";
 
 // 打印类型
 export enum ConsoleType {
@@ -9,7 +9,7 @@ export enum ConsoleType {
 }
 
 // 全局打印处理
-export default class ConsoleManage {
+export class ConsoleManage {
   // 打印记录
   private logList: {
     type: `${ConsoleType}`;
@@ -44,8 +44,26 @@ export default class ConsoleManage {
 
   // 打印全部
   public consoleAll() {
+    // 跟打印内容之间加一个空行
+    console.log("");
     this.logList.forEach((item) => {
       console[item.type](`${libName} ${item.message}`);
+    });
+  }
+
+  public addMessageList(
+    addType: `${ConsoleType}`,
+    messages:
+      | string[]
+      | {
+          toString: () => string;
+        }[],
+  ) {
+    messages.forEach((item) => {
+      this.logList.push({
+        type: addType,
+        message: item.toString(),
+      });
     });
   }
 
