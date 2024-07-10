@@ -33,7 +33,6 @@ const compressJpegImage = async ({ img, quality }) => {
 
 self.onmessage = async (event) => {
   const params = JSON.parse(event.data);
-  console.log("store", store);
   if (params.type === "compressImage") {
     const taskData = (await store.getItem(params.taskId)) as TaskType;
     const file = taskData.file;

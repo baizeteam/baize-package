@@ -18,11 +18,7 @@ export const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY)
     };
     const taskId = `baize-compress-image-${id}`;
     await store.setItem(taskId, taskData);
-    await store.getItem(taskId).then((value) => {
-      console.log("localforage value:", value);
-    });
     worker.onmessage = async (event) => {
-      console.log("compressImageWorker:", event.data);
       const message = JSON.parse(event.data);
       if (message.type === "compressImageSuccess") {
         const result = await store.getItem(taskId);
