@@ -1,8 +1,1 @@
-import { Plugin } from 'vite';
-
-interface Options {
-  cdnSubPath: string;
-  cdnigorePath: string;
-}
-
-export function compressImageWorker(options?: Options): Plugin;
+export function compressImageWorker(file: File, quality: number);
