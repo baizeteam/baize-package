@@ -1,0 +1,41 @@
+{
+  "name": "baize-compress-image",
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "index.d.ts"
+  ],
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build:page": "tsc && cross-env BUILD_MODE=page vite build",
+    "build": "tsc && cross-env BUILD_MODE=lib vite build"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "cross-env": "^7.0.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rollup-plugin-node-externals": "^7.1.2",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.10"
+  },
+  "dependencies": {
+    "nanoid": "^5.0.7"
+  },
+  "peerDependencies": {
+    "localforage": ">=1.10.0"
+  }
+}
