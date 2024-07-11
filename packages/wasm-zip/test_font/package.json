@@ -1,0 +1,22 @@
+{
+  "name": "test_front",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "wasm": "wasm-pack build --target web",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "author": "lgldlk",
+  "license": "ISC",
+  "dependencies": {
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
+    "vite": "^5.3.3",
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-wasm": "^3.3.0",
+    "wasm-zip": "file:../pkg"
+  }
+}
