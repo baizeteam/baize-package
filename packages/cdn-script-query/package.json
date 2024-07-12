@@ -2,14 +2,26 @@
   "name": "cdn-script-query",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
+  "types": "./index.d.ts",
   "scripts": {
     "build": "tsc && cross-env BUILD_MODE=lib vite build",
     "test": "jest"
   },
+  "files": [
+    "dist",
+    "index.d.ts"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "exports": {
+    "types": "./index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.js"
+  },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/node": "^20.12.11",
@@ -28,7 +40,8 @@
     "ts-jest": "^29.1.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
-    "vite": "^5.2.11"
+    "vite": "^5.2.11",
+    "vite-plugin-dts": "^3.8.0"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

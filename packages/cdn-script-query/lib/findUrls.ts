@@ -1,7 +1,8 @@
-import { PropertyCdn } from "../types";
-import { PackageNetworkError, NoVersionError } from "../ErrorTypes";
-import { composeVersionObj } from "../versionHandler";
-import { getPackageVersion, getPackageURL, getPackageJsonByUrl } from "./lib";
+import { PropertyCdn } from "./types";
+import { PackageNetworkError, NoVersionError } from "./ErrorTypes";
+import { composeVersionObj } from "./versionHandler";
+import { getPackageVersion, getPackageURL, getPackageJsonByUrl } from "./core/lib";
+import { getCdnCacheInstance, CdnErrorType, successCacheCellType, CacheCellType, failCacheCellType } from "./cache";
 
 /**
  * 查找指定包的 CDN 链接，并返回 CDN 链接和版本不匹配的包的列表

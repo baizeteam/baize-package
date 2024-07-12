@@ -1,10 +1,11 @@
 import path from "path";
 import fs from "fs";
 import { PluginOption, UserConfig } from "vite";
-import { composeVersionObj, ConsoleManage, findUrls, getPackageDependencies, getPackageJsonByUrl } from "./utils";
+import { ConsoleManage } from "./utils";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
 import { generateScript } from "./utils/generateScript";
+import { findUrls, getPackageDependencies } from "cdn-script-query";
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
   const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
