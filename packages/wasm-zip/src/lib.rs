@@ -1,10 +1,7 @@
 use std::io::Cursor;
 use std::io::Write;
 use wasm_bindgen::prelude::*;
-use zip::write::FileOptionExtension;
-use zip::write::FileOptions;
 use zip::write::SimpleFileOptions;
-use zip::CompressionMethod;
 use zip::ZipWriter;
 
 #[wasm_bindgen]
@@ -23,7 +20,6 @@ impl ZipMarker {
         let zip = &mut self.zip;
         let options =
             SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
-
         zip.start_file::<String, _, String>(file_name, options)
             .unwrap();
         zip.write_all(&data).unwrap();

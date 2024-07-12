@@ -19,11 +19,13 @@ async function loadZip(ev) {
     .then((fileRes) => {
       console.time("wasm zip");
       const zipMarker = new wasm.ZipMarker();
+      console.time("wasm zip file start");
       fileRes.map((item) => {
         zipMarker.file(item.name, item.buf);
       });
+      console.timeEnd("wasm zip file start");
       let res_buffer = zipMarker.generateAsync();
-      const blob = new Blob([res_buffer], { type: "application/octet-stream" });
+      const blob = new Blob([res_buffer]);
       console.timeEnd("wasm zip");
       saveAs(blob, "a.zip");
       return fileRes;
