@@ -5,7 +5,7 @@ import { ConsoleManage } from "./utils";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
 import { generateScript } from "./utils/generateScript";
-import { findUrls, getPackageDependencies } from "cdn-script-query";
+import { findUrls, getPackageDependencies } from "cdn-script-core";
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
   const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;

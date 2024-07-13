@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { getPackageURL } from "../../lib/utils";
+import { getPackageURL } from "../../lib/core";
 
 describe("get package url truly", () => {
   test("test getPackageURL", async () => {
