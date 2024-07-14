@@ -1,11 +1,9 @@
 import path from "path";
 import fs from "fs";
 import { PluginOption, UserConfig } from "vite";
-import { ConsoleManage } from "./utils";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
-import { generateScript } from "./utils/generateScript";
-import { findUrls, getPackageDependencies } from "cdn-script-core";
+import { ConsoleManage, findUrls, generateScript, getPackageDependencies } from "cdn-script-core";
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
   const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
@@ -21,7 +19,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
     async transformIndexHtml(html) {
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
       // 打印控制器
-      let consoleManage: ConsoleManage = new ConsoleManage();
+      let consoleManage: ConsoleManage = new ConsoleManage(libName);
       const packageJsonPath = path.resolve(process.cwd(), "package.json");
       try {
         const packageJson = fs.readFileSync(packageJsonPath, "utf-8");
