@@ -31,7 +31,8 @@
   "scripts": {
     "dev": "vite",
     "build:page": "tsc && cross-env BUILD_MODE=page vite build",
-    "build": "vite build"
+    "build": "vite build",
+    "test": ""
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
