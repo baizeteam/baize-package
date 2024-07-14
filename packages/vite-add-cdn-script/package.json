@@ -31,8 +31,7 @@
   "scripts": {
     "dev": "vite",
     "build:page": "tsc && cross-env BUILD_MODE=page vite build",
-    "build": "tsc && cross-env BUILD_MODE=lib vite build",
-    "test": "jest"
+    "build": "tsc && cross-env BUILD_MODE=lib vite build"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
@@ -58,6 +57,5 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
