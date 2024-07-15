@@ -4,6 +4,7 @@ import { Compilation, Compiler, sources } from "webpack";
 import { IOptions } from "./types";
 import { libName } from "./config";
 import { ConsoleManage, findUrls, generateScript, getPackageDependencies } from "cdn-script-core";
+import { isObject, isStr } from "./utils/tools";
 
 class WebpackAddCdnScript {
   constructor(private options: IOptions) {}
@@ -29,11 +30,11 @@ class WebpackAddCdnScript {
               return callback();
             }
             let external: string[] = [];
-            if (typeof inputExternal === "string") {
+            if (isStr(inputExternal)) {
               external = [inputExternal];
             } else if (Array.isArray(inputExternal)) {
               external = inputExternal.filter((item) => typeof item === "string") as string[];
-            } else if (typeof inputExternal === "object") {
+            } else if (isObject(inputExternal)) {
               external = Object.keys(inputExternal);
             }
             if (external.length === 0) {

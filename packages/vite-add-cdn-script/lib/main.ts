@@ -4,6 +4,7 @@ import { PluginOption, UserConfig } from "vite";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
 import { ConsoleManage, findUrls, generateScript, getPackageDependencies } from "cdn-script-core";
+import { isObject, isStr } from "./utils/tools";
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
   const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
@@ -29,11 +30,11 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
           return html;
         }
         let external: string[] = [];
-        if (typeof inputExternal === "string") {
+        if (isStr(inputExternal)) {
           external = [inputExternal];
         } else if (Array.isArray(inputExternal)) {
           external = inputExternal.filter((item) => typeof item === "string") as string[];
-        } else if (typeof inputExternal === "object") {
+        } else if (isObject(inputExternal)) {
           return html;
         }
 

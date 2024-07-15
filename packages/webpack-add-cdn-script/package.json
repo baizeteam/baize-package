@@ -2,18 +2,18 @@
   "name": "webpack-add-cdn-script",
   "version": "0.0.1",
   "keywords": [
-    "vite",
+    "webpack",
     "cdn",
     "cdn-script",
     "auto-add-cdn",
-    "vite-add-cdn-script"
+    "webpack-add-cdn-script"
   ],
-  "description": "A plugin for vite to add cdn script to index.html",
+  "description": "A plugin for webpack to add cdn script to index.html",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/baizeteam/baize-package.git"
   },
-  "homepage": "https://github.com/baizeteam/baize-package/tree/release/package/vite-add-cdn-script#readme",
+  "homepage": "https://github.com/baizeteam/baize-package/tree/release/package/webpack-add-cdn-script#readme",
   "author": "baizeteam",
   "type": "module",
   "files": [
@@ -30,8 +30,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build:page": "tsc && cross-env BUILD_MODE=page vite build",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "test": ""
   },
   "devDependencies": {
