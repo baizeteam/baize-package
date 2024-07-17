@@ -1,4 +1,4 @@
-import { PropertyCdn } from "../types";
+import { PropertyCdn } from "./types";
 
 /**
  * 网络请求失败

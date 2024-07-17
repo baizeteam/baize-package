@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { compareVersion, composeVersionObj } from "../lib/utils/versionHandler";
+import { compareVersion, composeVersionObj } from "../lib/versionHandler";
 
 describe("compareVersion", () => {
   it("should return 0 when versions are equal", () => {
