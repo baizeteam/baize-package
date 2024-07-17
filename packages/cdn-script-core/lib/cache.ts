@@ -1,7 +1,7 @@
 import path from "path";
 
 import fs from "fs";
-import { PropertyCdn } from "../types";
+import { PropertyCdn } from "./types";
 
 export type CacheFileType = {
   packageDependencies: {

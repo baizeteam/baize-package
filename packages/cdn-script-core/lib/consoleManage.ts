@@ -1,5 +1,3 @@
-import { libName } from "../config";
-
 // 打印类型
 export enum ConsoleType {
   log = "log",
@@ -15,6 +13,14 @@ export class ConsoleManage {
     type: `${ConsoleType}`;
     message: string;
   }[] = [];
+
+  // 打印前缀
+  private prefixString: string = "cdn-script";
+  constructor(prefixString?: string) {
+    if (prefixString) {
+      this.prefixString = prefixString;
+    }
+  }
 
   // 打印方法
   public log(message: string) {
@@ -47,7 +53,7 @@ export class ConsoleManage {
     // 跟打印内容之间加一个空行
     console.log("");
     this.logList.forEach((item) => {
-      console[item.type](`${libName} ${item.message}`);
+      console[item.type](`${this.prefixString} ${item.message}`);
     });
   }
 

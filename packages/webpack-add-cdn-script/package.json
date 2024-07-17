@@ -1,19 +1,19 @@
 {
-  "name": "vite-add-cdn-script",
-  "version": "1.0.0",
+  "name": "webpack-add-cdn-script",
+  "version": "0.0.1",
   "keywords": [
-    "vite",
+    "webpack",
     "cdn",
     "cdn-script",
     "auto-add-cdn",
-    "vite-add-cdn-script"
+    "webpack-add-cdn-script"
   ],
-  "description": "A plugin for vite to add cdn script to index.html",
+  "description": "A plugin for webpack to add cdn script to index.html",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/baizeteam/baize-package.git"
   },
-  "homepage": "https://github.com/baizeteam/baize-package/tree/release/package/vite-add-cdn-script#readme",
+  "homepage": "https://github.com/baizeteam/baize-package/tree/release/package/webpack-add-cdn-script#readme",
   "author": "baizeteam",
   "type": "module",
   "files": [
@@ -30,18 +30,20 @@
   },
   "scripts": {
     "dev": "vite",
-    "build:page": "tsc && cross-env BUILD_MODE=page vite build",
-    "build": "tsc && cross-env BUILD_MODE=lib vite build",
+    "build": "tsc && vite build",
     "test": ""
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@types/node": "^20.12.11",
+    "@rspack/cli": "^0.7.5",
+    "@types/node": "^20.14.2",
     "@types/node-fetch": "2",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "@types/semver": "^7.5.8",
+    "@types/webpack-sources": "^3.2.3",
     "@vitejs/plugin-react": "^4.2.1",
+    "cdn-script-core": "workspace:*",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "react": "^18.2.0",
@@ -50,13 +52,17 @@
     "rollup-plugin-external-globals": "^0.10.0",
     "rollup-plugin-node-externals": "^7.1.2",
     "ts-jest": "^29.1.4",
+    "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.11",
-    "cdn-script-core": "workspace:*"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@rspack/core": "^0.7.5",
+    "vite": "^5.2.11",
+    "webpack": "^5.93.0",
+    "webpack-sources": "^3.2.3"
+  }
 }
