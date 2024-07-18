@@ -9,20 +9,37 @@ export * from "./ErrorTypes";
 import fs from "fs";
 import { PropertyCdn } from "./types";
 import { generateScript } from "./generateScript";
+import { isObject, isStr } from "./common";
+
+export type ExternalOption = any;
 
 export default async function getExternalScript({
   libName,
   customScript,
-  external,
+  external: inputExternal,
   defaultCdns,
 }: {
   libName: string;
-  external: string[];
+  external: ExternalOption;
   customScript: { [key: string]: string };
   defaultCdns: PropertyCdn[];
 }) {
   let consoleManage: ConsoleManage = new ConsoleManage(libName);
   const packageJsonPath = path.resolve(process.cwd(), "package.json");
+  if (!inputExternal) {
+    return "";
+  }
+  let external: string[] = [];
+  if (isStr(inputExternal)) {
+    external = [inputExternal];
+  } else if (Array.isArray(inputExternal)) {
+    external = inputExternal.filter((item) => typeof item === "string") as string[];
+  } else if (isObject(inputExternal)) {
+    external = Object.keys(inputExternal);
+  } else {
+    return "";
+  }
+
   try {
     const packageJson = fs.readFileSync(packageJsonPath, "utf-8");
 
@@ -63,7 +80,6 @@ export default async function getExternalScript({
       });
 
       if (notFindPackages.length > 0) {
-        console.error(`找不到${notFindPackages.join(",")}的版本`);
         throw new Error(`找不到${notFindPackages.join(",")}的版本`);
       }
     }
