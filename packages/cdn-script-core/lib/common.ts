@@ -3,7 +3,7 @@ function toStringCall(obj: any) {
   return Object.prototype.toString.call(obj);
 }
 // isString
-export function isStr(obj: any): obj is String {
+export function isStr(obj: any): obj is string {
   return toStringCall(obj) === "[object String]";
 }
 // isObject

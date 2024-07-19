@@ -14,7 +14,7 @@ const libConfig = {
       plugins: [nodeExternals()],
     },
   },
-  plugins: [dts()],
+  plugins: [dts({ rollupTypes: true })],
 };
 
 export default defineConfig(libConfig);

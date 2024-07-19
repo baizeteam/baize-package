@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import nodeExternals from "rollup-plugin-node-externals";
+import dts from "vite-plugin-dts";
 
 const libConfig = {
   build: {
@@ -12,6 +13,7 @@ const libConfig = {
       plugins: [nodeExternals()],
     },
   },
+  plugins: [dts({})],
 };
 
 export default defineConfig(libConfig);
