@@ -22,15 +22,15 @@
   ],
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "types": "./index.d.ts",
+    "types": "./dist/index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.js"
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "test": ""
   },
   "devDependencies": {
@@ -62,6 +62,7 @@
   "dependencies": {
     "@rspack/core": "^0.7.5",
     "vite": "^5.2.11",
+    "vite-plugin-dts": "^3.9.1",
     "webpack": "^5.93.0",
     "webpack-sources": "^3.2.3"
   }
