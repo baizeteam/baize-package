@@ -1,7 +1,6 @@
-import { describe, expect, it, jest, beforeEach, afterEach } from "@jest/globals";
-import { ConsoleManage } from "../lib/utils";
-import { libName } from "../lib/config";
-
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { ConsoleManage } from "../lib";
+const libName = "cdn-script";
 describe("consoleManage", () => {
   const consoleManage = new ConsoleManage();
   beforeEach(() => {

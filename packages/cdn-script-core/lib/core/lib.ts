@@ -1,4 +1,4 @@
-import { PropertyCdn } from "../../types";
+import { PropertyCdn } from "../types";
 import { GetFileListError } from "../ErrorTypes";
 import req from "../request";
 import bootcdnProcess from "./bootcdn";

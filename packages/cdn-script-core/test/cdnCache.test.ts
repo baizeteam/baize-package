@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { CacheCellType, CdnCache, Dependencies } from "../lib/utils/cache";
+import { CacheCellType, CdnCache, Dependencies } from "../lib/cache";
 import fs from "fs";
 
 import path from "path";
