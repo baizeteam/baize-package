@@ -1,7 +1,7 @@
 import { PluginOption, UserConfig } from "vite";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
-import getExternalScript from "cdn-script-core";
+import { getExternalScript } from "cdn-script-core";
 
 function viteAddCdnScript(opt: IOptions): PluginOption {
   const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;

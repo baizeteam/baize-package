@@ -13,7 +13,7 @@ import { isObject, isStr } from "./common";
 
 export type ExternalOption = any;
 
-export default async function getExternalScript({
+export async function getExternalScript({
   libName,
   customScript,
   external: inputExternal,
