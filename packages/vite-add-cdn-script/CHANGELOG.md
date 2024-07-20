@@ -1,5 +1,11 @@
 # vite-add-cdn-script
 
+## 1.0.1
+
+### Patch Changes
+
+- 抽离核心包到 cdn-script-core
+
 ## 1.0.0
 
 ### Major Changes
