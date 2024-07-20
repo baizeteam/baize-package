@@ -1,6 +1,6 @@
 {
   "name": "webpack-add-cdn-script",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "keywords": [
     "webpack",
     "cdn",
