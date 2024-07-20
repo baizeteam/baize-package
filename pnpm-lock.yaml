@@ -231,6 +231,9 @@ importers:
 
   packages/webpack-add-cdn-script:
     dependencies:
+      cdn-script-core:
+        specifier: workspace:*
+        version: link:../cdn-script-core
       webpack:
         specifier: '>=5.0.0'
         version: 5.93.0
@@ -265,9 +268,6 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.3.1(vite@5.2.11(@types/node@20.14.11)(less@4.2.0)(terser@5.31.3))
-      cdn-script-core:
-        specifier: workspace:*
-        version: link:../cdn-script-core
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
