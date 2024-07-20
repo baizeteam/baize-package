@@ -1,6 +1,6 @@
 {
   "name": "vite-add-cdn-script",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "keywords": [
     "vite",
     "cdn",
@@ -26,7 +26,7 @@
   "exports": {
     "types": "./index.d.ts",
     "import": "./dist/index.js",
-    "require": "./dist/index.js"
+    "require": "./dist/index.umd.cjs"
   },
   "scripts": {
     "dev": "vite",
