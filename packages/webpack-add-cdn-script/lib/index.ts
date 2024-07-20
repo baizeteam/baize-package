@@ -2,7 +2,7 @@ import path from "path";
 import { Compilation, Compiler, sources } from "webpack";
 import { IOptions } from "./types";
 import { libName } from "./config";
-import getExternalScript from "cdn-script-core";
+import { getExternalScript } from "cdn-script-core";
 
 class WebpackAddCdnScript {
   constructor(private options: IOptions) {}
