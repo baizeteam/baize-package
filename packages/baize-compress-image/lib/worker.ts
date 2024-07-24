@@ -35,12 +35,12 @@ self.onmessage = async (event) => {
   const params = JSON.parse(event.data);
   if (params.type === "compressImage") {
     const taskData = (await store.getItem(params.taskId)) as TaskType;
+    await store.removeItem(params.taskId);
     const file = taskData.file;
     const compressRes = await compressJpegImage({
       img: file.slice(0, file.size, file.type),
       quality: taskData.quality || DEFAULT_QUALITY,
     });
-    store.removeItem(params.taskId);
     store.setItem(params.taskId, compressRes);
     self.postMessage(
       JSON.stringify({
