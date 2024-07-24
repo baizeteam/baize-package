@@ -16,4 +16,6 @@ export interface IOptions {
   customScript?: { [key: string]: string };
   retryTimes?: number;
   defaultCdns?: PropertyCdn[];
+
+  uploadFiles?: (filePath: string, info: {}) => {};
 }

@@ -1,18 +1,38 @@
-import { PluginOption, UserConfig } from "vite";
+import { BuildOptions, PluginOption, UserConfig, normalizePath } from "vite";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
 import { getExternalScript } from "cdn-script-core";
+import glob from "glob";
 
+import path from "path";
 function viteAddCdnScript(opt: IOptions): PluginOption {
   const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
   let _config: UserConfig;
-
+  let buildConfig: BuildOptions | undefined = undefined;
   return {
     name: libName,
     enforce: EEnforce.PRE,
     apply: "build",
-    config(confing) {
-      _config = confing;
+    config(config) {
+      _config = config;
+      buildConfig = config.build;
+    },
+    closeBundle: {
+      sequential: true,
+      order: "post",
+      async handler() {
+        if (!buildConfig || !opt.uploadFiles) return;
+        const outDirPath = normalizePath(path.resolve(normalizePath(buildConfig.outDir)));
+        const files = glob.sync(outDirPath + "/**/*", {
+          nodir: true,
+          dot: true,
+          ignore: "**/*.html",
+        });
+        // 上传文件
+        for (const file of files) {
+          opt.uploadFiles(file, {});
+        }
+      },
     },
     async transformIndexHtml(html) {
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
