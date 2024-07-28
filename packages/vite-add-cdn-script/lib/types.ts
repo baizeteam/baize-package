@@ -17,5 +17,5 @@ export interface IOptions {
   retryTimes?: number;
   defaultCdns?: PropertyCdn[];
 
-  uploadFiles?: (filePath: string, info: {}) => {};
+  uploadFiles?: (filePath: string, info: {}) => string | Promise<string>;
 }

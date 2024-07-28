@@ -16,7 +16,14 @@ const pageConfig = {
   server: {
     port: 6101,
   },
-  plugins: [react(), viteAddCdnScript({})],
+  plugins: [
+    react(),
+    viteAddCdnScript({
+      uploadFiles: () => {
+        return "tmp.com/xxx";
+      },
+    }),
+  ],
   base: "./",
   build: {
     outDir: "dist-page",
