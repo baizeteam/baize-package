@@ -39,33 +39,16 @@ const worker = new Worker();
 // };
 
 
-// 返回出颜色深度的值，用于计算 size * colorDepth 得出原图片尺寸
-function getColorDepth(imageData: ImageData): number {
-  const data = imageData.data;
-  if (data.length === imageData.width * imageData.height * 3) {
-    return 24; // 每个像素 3 字节，即 24 位真彩色
-  } else if (data.length === imageData.width * imageData.height * 4) {
-    return 32; // 每个像素 4 字节，可能是 32 位 ARGB 等格式
-  }
-  // 对于其他不常见的情况，返回默认值 24
-  return 24;
-}
 
 // compressImageWorker 函数定义
-export async function compressImageWorker(file: File): Promise<Blob> {
+export async function compressImageWorker(file: File, initialQuality: number = 0.8): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
     const reader = new FileReader();
-    // 想要打印出原始图像文件的大小（即未压缩前的大小），您可以在 FileReader 的 onload 事件中通过 e.target.result 的长度来获取
-    // 因为 readAsDataURL 方法会以 Base64 编码的形式读取文件，其结果长度可以用来近似原始文件的大小
-    // （Base64 编码会将原始数据的每3个字节转换为4个字符，所以需要除以4再乘以3来近似原始大小）
-
     reader.onload = async (e: ProgressEvent<FileReader>) => {
       try {
-        // 根据文件类型生成对应的 Base64 前缀
         const base64Prefix = `data:${file.type};base64,`;
-        // 获取原始文件大小
         const base64Data = e.target.result as string;
-        const originalSizeInBytes = (base64Data.length - base64Prefix.length) * (3/4);
+        const originalSizeInBytes = (base64Data.length - base64Prefix.length) * (3 / 4);
 
         const image = new Image();
         image.src = e.target.result as string;
@@ -80,20 +63,15 @@ export async function compressImageWorker(file: File): Promise<Blob> {
           canvas.height = image.height;
           ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-          // const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          // const colorDepth = getColorDepth(imageData);
-          // // 计算原来的size
-          // const originalSizeInBytes = image.width * image.height * colorDepth / 8;
-
           let blob: Blob;
           if (file.type === 'image/png') {
             // PNG 图片的压缩逻辑
-            const arrayBuffer = new Uint8Array(e.target.result as ArrayBuffer);
+            const arrayBuffer = new Uint8Array(atob(base64Data.split(',')[1]));
             const pngData = UPNG.decode(arrayBuffer);
             const compressedPngData = UPNG.encode(pngData, {
-              colorType: 6, // 6 表示 RGBA
-              filter: 0, // 无过滤
-              compressionLevel: 2 // 压缩级别
+              colorType: 6,
+              filter: 0,
+              compressionLevel: 2
             });
             blob = new Blob([compressedPngData], { type: 'image/png' });
           } else {
@@ -105,15 +83,21 @@ export async function compressImageWorker(file: File): Promise<Blob> {
                 } else {
                   reject(new Error('Could not create compressed blob'));
                 }
-              }, file.type, 0.7); // 设置压缩质量为 0.8
+              }, file.type, initialQuality);
             });
           }
 
-          // 等待 Blob 创建完成
           Promise.resolve(blob).then((result) => {
-            console.log(`Original size: ${originalSizeInBytes} bytes`);
-            console.log(`Compressed size: ${result.size} bytes`);
-            resolve(transfer(result, [result]));
+            const unit = 1000;
+            console.log(`Original size: ${originalSizeInBytes / unit} kb`);
+            console.log(`Compressed size: ${result.size / unit} kb`);
+            // 如果压缩后的文件大于或等于原始文件，且质量大于 0.1，则继续递归压缩
+            if (result.size >= originalSizeInBytes && initialQuality > 0.1) {
+              console.log('Compressed image is not smaller, attempting further compression.');
+              compressImageWorker(file, initialQuality - 0.1).then(newBlob => resolve(newBlob));
+            } else {
+              resolve(transfer(result, [result]));
+            }
           }).catch(reject);
         };
         image.onerror = (error) => {
@@ -129,3 +113,4 @@ export async function compressImageWorker(file: File): Promise<Blob> {
     reader.readAsDataURL(file);
   });
 }
+
