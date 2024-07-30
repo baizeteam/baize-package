@@ -40,7 +40,10 @@ const worker = new Worker();
 
 
 
-// compressImageWorker 函数定义
+/** compressImageWorker 函数定义 */
+// 使用 <canvas> 元素来处理所有非 PNG 图片的压缩。
+// 对于 PNG 图片，我们仍然使用 UPNG 库来压缩
+// 对于其他格式，我们使用 canvas.toBlob() 方法来创建压缩后的 Blob 对象
 export async function compressImageWorker(file: File, initialQuality: number = 0.8): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
     const reader = new FileReader();
@@ -65,7 +68,7 @@ export async function compressImageWorker(file: File, initialQuality: number = 0
 
           let blob: Blob;
           if (file.type === 'image/png') {
-            // PNG 图片的压缩逻辑
+            // PNG 图片的压缩逻辑, 为了使用 UPNG，我们需要将 Base64 编码的字符串转换回 ArrayBuffer
             const arrayBuffer = new Uint8Array(atob(base64Data.split(',')[1]));
             const pngData = UPNG.decode(arrayBuffer);
             const compressedPngData = UPNG.encode(pngData, {
