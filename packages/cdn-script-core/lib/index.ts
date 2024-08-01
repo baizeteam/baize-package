@@ -3,6 +3,7 @@ import { findUrls, getPackageDependencies } from "./findUrls";
 
 import path from "path";
 export * from "./consoleManage";
+export * from "./common";
 export * from "./generateScript";
 export * from "./findUrls";
 export * from "./ErrorTypes";
