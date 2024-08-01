@@ -65,7 +65,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       // 获取打包结果中的本地的js名字
       const inHtmlJsName = html.match(/(?<=<script.*src=(["|']))(?=[./])(.*?)\1/g);
       if (inHtmlJsName) {
-        mainJsNames = inHtmlJsName.map((item) => item.slice(0, -1));
+        mainJsNames.push(...inHtmlJsName.map((item) => item.slice(0, -1)));
       }
       // 打印控制器
       const external = _config.build?.rollupOptions?.external;

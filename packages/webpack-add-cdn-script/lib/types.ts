@@ -18,4 +18,5 @@ export interface IOptions {
   defaultCdns?: PropertyCdn[];
 
   external: string[];
+  uploadFiles?: (filePath: string, info: {}) => string | Promise<string>;
 }
