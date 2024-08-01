@@ -37,7 +37,7 @@ function App() {
     <div>
       Hello localforage-worker!
       <div>
-        <input type="file" onChange={handleFileChange} />
+        <input type="file" multiple onChange={handleFileChange} />
       </div>
       <div style={{display: originalImageUrl ? 'block' : 'none'}}>
         <h2>原图</h2>

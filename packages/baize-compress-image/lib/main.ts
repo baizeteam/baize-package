@@ -10,35 +10,6 @@ const store = localforage.createInstance(DEFAUTL_FORAGE_CONFIG);
 
 const worker = new Worker();
 
-// export const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY) => {
-//   return new Promise(async (resolve, reject) => {
-//     const id = nanoid(8);
-//     const taskData = {
-//       file,
-//       quality,
-//       id,
-//     };
-//     const taskId = `baize-compress-image-${id}`;
-//     await store.setItem(taskId, taskData);
-//     worker.onmessage = async (event) => {
-//       const message = JSON.parse(event.data);
-//       if (message.type === "compressImageSuccess") {
-//         const result = await store.getItem(taskId);
-//         await store.removeItem(taskId);
-//         resolve(result);
-//       } else {
-//         reject(event.data);
-//       }
-//     };
-//     const message = {
-//       type: "compressImage",
-//       taskId,
-//     };
-//     worker.postMessage(JSON.stringify(message));
-//   });
-// };
-
-
 
 /** compressImageWorker 函数定义 */
 // 使用 <canvas> 元素来处理所有非 PNG 图片的压缩。
@@ -96,8 +67,9 @@ export async function compressImageWorker(file: File, initialQuality: number = 0
             console.log(`Compressed size: ${result.size / unit} kb`);
             // 如果压缩后的文件大于或等于原始文件，且质量大于 0.1，则继续递归压缩
             if (result.size >= originalSizeInBytes && initialQuality > 0.1) {
-              console.log('Compressed image is not smaller, attempting further compression.');
-              compressImageWorker(file, initialQuality - 0.1).then(newBlob => resolve(newBlob));
+              resolve(file);
+              // console.log('Compressed image is not smaller, attempting further compression.');
+              // compressImageWorker(file, initialQuality - 0.1).then(newBlob => resolve(newBlob));
             } else {
               resolve(transfer(result, [result]));
             }
@@ -116,4 +88,3 @@ export async function compressImageWorker(file: File, initialQuality: number = 0
     reader.readAsDataURL(file);
   });
 }
-
