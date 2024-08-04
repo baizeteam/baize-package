@@ -55,12 +55,12 @@ class WebpackAddCdnScript {
     });
 
     compiler.hooks.afterEmit.tapPromise(`${libName} upload`, async (compilation) => {
-      if (!compiler.options.output.path) return;
+      if (!compiler.options.output.path || !this.options.uploadFiles || !mainJsNames.length) return;
       const outDirPath = path.resolve(normalizePath(compiler.options.output.path));
       const files = glob.sync(outDirPath + "/**/*", {
         nodir: true,
         dot: true,
-        ignore: "**/*.html",
+        ignore: this.options.uploadIgnore || "**/*.html",
       });
       const upLoadRes = await Promise.all(
         files.map(async (file) => ({
@@ -74,14 +74,18 @@ class WebpackAddCdnScript {
         dot: true,
       });
       if (htmlFilePath.length === 0) return;
-      const htmlFile = htmlFilePath[0];
-      let html = fs.readFileSync(htmlFile, "utf-8");
-      for (const mainJsName of mainJsNames) {
-        const find = upLoadRes.find((item) => mainJsName.includes(item.fileName));
-        if (!find) continue;
-        html = html.replace(mainJsName, find.ossPath);
+      for (const htmlFile of htmlFilePath) {
+        if (files.includes(htmlFile)) {
+          continue;
+        }
+        let html = fs.readFileSync(htmlFile, "utf-8");
+        for (const mainJsName of mainJsNames) {
+          const find = upLoadRes.find((item) => mainJsName.includes(item.fileName));
+          if (!find) continue;
+          html = html.replace(mainJsName, find.ossPath);
+        }
+        fs.writeFileSync(htmlFile, html);
       }
-      fs.writeFileSync(htmlFile, html);
     });
   }
 }

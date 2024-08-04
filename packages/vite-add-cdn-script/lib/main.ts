@@ -31,7 +31,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
           const files = glob.sync(outDirPath + "/**/*", {
             nodir: true,
             dot: true,
-            ignore: "**/*.html",
+            ignore: opt.uploadIgnore || "**/*.html",
           });
 
           const upLoadRes = await Promise.all(
@@ -46,14 +46,18 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
             dot: true,
           });
           if (htmlFilePath.length === 0) return;
-          const htmlFile = htmlFilePath[0];
-          let html = fs.readFileSync(htmlFile, "utf-8");
-          for (const mainJsName of mainJsNames) {
-            const find = upLoadRes.find((item) => mainJsName.includes(item.fileName));
-            if (!find) continue;
-            html = html.replace(mainJsName, find.ossPath);
+          for (const htmlFile of htmlFilePath) {
+            if (files.includes(htmlFile)) {
+              continue;
+            }
+            let html = fs.readFileSync(htmlFile, "utf-8");
+            for (const mainJsName of mainJsNames) {
+              const find = upLoadRes.find((item) => mainJsName.includes(item.fileName));
+              if (!find) continue;
+              html = html.replace(mainJsName, find.ossPath);
+            }
+            fs.writeFileSync(htmlFile, html);
           }
-          fs.writeFileSync(htmlFile, html);
         } catch (error) {
           console.error(`${libName} error:`, (error as Error).message);
           process.exit(1);
