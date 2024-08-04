@@ -34,7 +34,6 @@
     "vite": "^5.2.10"
   },
   "dependencies": {
-    "comlink": "^4.4.1",
     "nanoid": "^5.0.7",
     "upng-js": "^2.1.0"
   },

@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from'react';
-import ReactDOM from'react-dom/client';
-import { compressImageWorker } from '../lib/main';
+import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom/client";
+import { compressImageWorker } from "../lib/main";
+// import { compressImageWorker } from "../dist/index.js";
 
 function App() {
   useEffect(() => {}, []);
 
-  const [originalImageUrl, setOriginalImageUrl] = useState('');
-  const [compressedImageUrl, setCompressedImageUrl] = useState('');
+  const [originalImageUrl, setOriginalImageUrl] = useState("");
+  const [compressedImageUrl, setCompressedImageUrl] = useState("");
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -15,9 +16,10 @@ function App() {
     }
 
     const file = files[0];
-    console.time('compressImageWorker');
+    console.time("compressImageWorker");
     try {
       const compressedFile = await compressImageWorker(file);
+      console.log("%c [ res ]-12", "font-size:13px; background:pink; color:#bf2c9f;", compressedFile);
 
       const originalUrl = URL.createObjectURL(file);
       setOriginalImageUrl(originalUrl);
@@ -25,11 +27,9 @@ function App() {
       const compressedUrl = URL.createObjectURL(compressedFile);
       setCompressedImageUrl(compressedUrl);
 
-
-      console.log('%c [ res ]-12', 'font-size:13px; background:pink; color:#bf2c9f;', compressedFile);
-      console.timeEnd('compressImageWorker');
+      console.timeEnd("compressImageWorker");
     } catch (error) {
-      console.error('Compression failed:', error);
+      console.error("Compression failed:", error);
     }
   };
 
@@ -39,16 +39,16 @@ function App() {
       <div>
         <input type="file" multiple onChange={handleFileChange} />
       </div>
-      <div style={{display: originalImageUrl ? 'block' : 'none'}}>
+      <div style={{ display: originalImageUrl ? "block" : "none" }}>
         <h2>原图</h2>
-        <img src={originalImageUrl} style={{maxHeight: '200px'}} alt="Original Image" />
+        <img src={originalImageUrl} style={{ maxHeight: "200px" }} alt="Original Image" />
       </div>
-      <div style={{display: originalImageUrl ? 'block' : 'none'}}>
+      <div style={{ display: originalImageUrl ? "block" : "none" }}>
         <h2>压缩图</h2>
-        <img src={compressedImageUrl} style={{maxHeight: '200px'}} alt="Compressed Image" />
+        <img src={compressedImageUrl} style={{ maxHeight: "200px" }} alt="Compressed Image" />
       </div>
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('app')!).render(<App />);
+ReactDOM.createRoot(document.getElementById("app")!).render(<App />);
