@@ -36,9 +36,9 @@ class WebpackAddCdnScript {
               if (path.extname(assetName) === ".html") {
                 let source = assets[assetName].source().toString();
                 // 获取打包结果中的本地的js名字
-                const inHtmlJsName = source.match(/(?<=<script.*src=(["|']))(?=[./])(.*?)\1/g);
+                const inHtmlJsName = source.match(/(?<=<script.*?src=(["|']))(?=[./])(.*?)(?=\1)/g);
                 if (inHtmlJsName) {
-                  mainJsNames.push(...inHtmlJsName.map((item) => item.slice(0, -1)));
+                  mainJsNames.push(...inHtmlJsName);
                 }
                 source = source.replace("</head>", `${script}</head>`);
                 assets[assetName] = new sources.RawSource(source, true);
