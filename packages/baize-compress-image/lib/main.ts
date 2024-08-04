@@ -8,7 +8,7 @@ const store = localforage.createInstance(DEFAUTL_FORAGE_CONFIG);
 
 const worker = new Worker();
 
-export const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY) => {
+export const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promise<File> => {
   return new Promise(async (resolve, reject) => {
     const id = nanoid(8);
     const taskData = {
@@ -21,7 +21,7 @@ export const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY)
     worker.onmessage = async (event) => {
       const message = JSON.parse(event.data);
       if (message.type === "compressImageSuccess") {
-        const result = await store.getItem(taskId);
+        const result = (await store.getItem(taskId)) as File;
         await store.removeItem(taskId);
         resolve(result);
       } else {
