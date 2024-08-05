@@ -2,9 +2,7 @@ import path from "path";
 import { Compilation, Compiler, sources } from "webpack";
 import { IOptions } from "./types";
 import { libName } from "./config";
-import { getExternalScript, normalizePath } from "cdn-script-core";
-import * as glob from "glob";
-import fs from "node:fs";
+import { getExternalScript, getScriptSrcs, normalizePath, uploadAssetsFiles } from "cdn-script-core";
 
 let mainJsNames: string[] = [];
 class WebpackAddCdnScript {
@@ -36,7 +34,7 @@ class WebpackAddCdnScript {
               if (path.extname(assetName) === ".html") {
                 let source = assets[assetName].source().toString();
                 // 获取打包结果中的本地的js名字
-                const inHtmlJsName = source.match(/(?<=<script.*?src=(["|']))(?=[./])(.*?)(?=\1)/g);
+                const inHtmlJsName = getScriptSrcs(source);
                 if (inHtmlJsName) {
                   mainJsNames.push(...inHtmlJsName);
                 }
@@ -55,36 +53,18 @@ class WebpackAddCdnScript {
     });
 
     compiler.hooks.afterEmit.tapPromise(`${libName} upload`, async (compilation) => {
-      if (!compiler.options.output.path || !this.options.uploadFiles || !mainJsNames.length) return;
-      const outDirPath = path.resolve(normalizePath(compiler.options.output.path));
-      const files = glob.sync(outDirPath + "/**/*", {
-        nodir: true,
-        dot: true,
-        ignore: this.options.uploadIgnore || "**/*.html",
-      });
-      const upLoadRes = await Promise.all(
-        files.map(async (file) => ({
-          ossPath: await this.options.uploadFiles!(file, {}),
-          fileName: file.slice(outDirPath.length + 1),
-        })),
-      );
-      // 替换本地文件名
-      const htmlFilePath = glob.sync(outDirPath + "**/*.html", {
-        nodir: true,
-        dot: true,
-      });
-      if (htmlFilePath.length === 0) return;
-      for (const htmlFile of htmlFilePath) {
-        if (files.includes(htmlFile)) {
-          continue;
-        }
-        let html = fs.readFileSync(htmlFile, "utf-8");
-        for (const mainJsName of mainJsNames) {
-          const find = upLoadRes.find((item) => mainJsName.includes(item.fileName));
-          if (!find) continue;
-          html = html.replace(mainJsName, find.ossPath);
-        }
-        fs.writeFileSync(htmlFile, html);
+      try {
+        if (!compiler.options.output.path || !this.options.uploadFiles || !mainJsNames.length) return;
+        const outDirPath = path.resolve(normalizePath(compiler.options.output.path));
+        uploadAssetsFiles({
+          outDirPath,
+          uploadFiles: this.options.uploadFiles,
+          mainJsNames,
+          uploadIgnore: this.options.uploadIgnore,
+        });
+      } catch (error) {
+        console.error(`${libName} error:`, (error as Error).message);
+        process.exit(1);
       }
     });
   }

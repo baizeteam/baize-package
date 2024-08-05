@@ -31,3 +31,12 @@ export const isWindows = typeof process !== "undefined" && process.platform === 
 export function normalizePath(id: string): string {
   return path.posix.normalize(isWindows ? slash(id) : id);
 }
+
+/**
+ *  Get the script src in the html
+ * @param html  html
+ * @returns  script src
+ */
+export function getScriptSrcs(html: string): string[] | null {
+  return html.match(/(?<=<script.*?src=(["|']))(?=[./])(.*?)(?=\1)/g);
+}

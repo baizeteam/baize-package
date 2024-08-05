@@ -58,8 +58,6 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@types/glob": "^8.1.0",
-    "cdn-script-core": "workspace:*",
-    "glob": "^11.0.0"
+    "cdn-script-core": "workspace:*"
   }
 }

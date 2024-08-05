@@ -1,9 +1,8 @@
 import { BuildOptions, PluginOption, UserConfig } from "vite";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
-import { getExternalScript, normalizePath } from "cdn-script-core";
-import * as glob from "glob";
-import fs from "node:fs";
+import { getExternalScript, getScriptSrcs, normalizePath, uploadAssetsFiles } from "cdn-script-core";
+
 import path from "node:path";
 function viteAddCdnScript(opt: IOptions): PluginOption {
   const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
@@ -25,39 +24,13 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       async handler() {
         try {
           if (!buildConfig || !opt.uploadFiles || !buildConfig.outDir || !mainJsNames.length) return;
-
           const outDirPath = normalizePath(path.resolve(normalizePath(buildConfig.outDir)));
-
-          const files = glob.sync(outDirPath + "/**/*", {
-            nodir: true,
-            dot: true,
-            ignore: opt.uploadIgnore || "**/*.html",
+          uploadAssetsFiles({
+            outDirPath,
+            uploadFiles: opt.uploadFiles,
+            mainJsNames,
+            uploadIgnore: opt.uploadIgnore,
           });
-
-          const upLoadRes = await Promise.all(
-            files.map(async (file) => ({
-              ossPath: await opt.uploadFiles!(file, {}),
-              fileName: file.slice(outDirPath.length + 1),
-            })),
-          );
-          // 替换本地文件名
-          const htmlFilePath = glob.sync(outDirPath + "**/*.html", {
-            nodir: true,
-            dot: true,
-          });
-          if (htmlFilePath.length === 0) return;
-          for (const htmlFile of htmlFilePath) {
-            if (files.includes(htmlFile)) {
-              continue;
-            }
-            let html = fs.readFileSync(htmlFile, "utf-8");
-            for (const mainJsName of mainJsNames) {
-              const find = upLoadRes.find((item) => mainJsName.includes(item.fileName));
-              if (!find) continue;
-              html = html.replace(mainJsName, find.ossPath);
-            }
-            fs.writeFileSync(htmlFile, html);
-          }
         } catch (error) {
           console.error(`${libName} error:`, (error as Error).message);
           process.exit(1);
@@ -67,7 +40,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
     async transformIndexHtml(html) {
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
       // 获取打包结果中的本地的js名字
-      const inHtmlJsName = html.match(/(?<=<script.*?src=(["|']))(?=[./])(.*?)(?=\1)/g);
+      const inHtmlJsName = getScriptSrcs(html);
       if (inHtmlJsName) {
         mainJsNames.push(...inHtmlJsName);
       }
