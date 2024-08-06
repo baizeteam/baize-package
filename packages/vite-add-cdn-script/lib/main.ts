@@ -23,8 +23,8 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       order: "post",
       async handler() {
         try {
-          if (!buildConfig || !opt.uploadFiles || !buildConfig.outDir || !mainJsNames.length) return;
-          const outDirPath = normalizePath(path.resolve(normalizePath(buildConfig.outDir)));
+          if (!buildConfig || !opt.uploadFiles || !mainJsNames.length) return;
+          const outDirPath = normalizePath(path.resolve(normalizePath(buildConfig.outDir || "dist")));
           uploadAssetsFiles({
             outDirPath,
             uploadFiles: opt.uploadFiles,

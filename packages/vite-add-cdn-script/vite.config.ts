@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import nodeExternals from "rollup-plugin-node-externals";
 import externalGlobals from "rollup-plugin-external-globals";
 import viteAddCdnScript from "./lib/main";
+import dts from "vite-plugin-dts";
 
 const externals = {
   react: "React",
@@ -45,6 +46,13 @@ const libConfig = {
       plugins: [nodeExternals()],
     },
   },
+  plugins: [
+    dts({
+      root: "./",
+      entryRoot: "./lib",
+      outDir: "dist",
+    }),
+  ],
 };
 
 export default defineConfig(process.env.BUILD_MODE === "lib" ? libConfig : pageConfig);
