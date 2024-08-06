@@ -38,5 +38,5 @@ export function normalizePath(id: string): string {
  * @returns  script src
  */
 export function getScriptSrcs(html: string): string[] | null {
-  return html.match(/(?<=<script.*?src=(["|']))(?=[./])(.*?)(?=\1)/g);
+  return html.match(/(?<=<script.*?src=(["|']))(?=[./]).*?(?=\1)|(?<=<link.*?href=(["|']))(?=[./]).*?(?=\2)/g);
 }
