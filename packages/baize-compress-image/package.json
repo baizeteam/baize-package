@@ -1,6 +1,6 @@
 {
   "name": "baize-compress-image",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "files": [
     "dist",
@@ -24,6 +24,7 @@
   "devDependencies": {
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/upng-js": "^2.1.5",
     "@vitejs/plugin-react": "^4.3.0",
     "cross-env": "^7.0.3",
     "react": "^18.3.1",
@@ -33,7 +34,8 @@
     "vite": "^5.2.10"
   },
   "dependencies": {
-    "nanoid": "^5.0.7"
+    "nanoid": "^5.0.7",
+    "upng-js": "^2.1.0"
   },
   "peerDependencies": {
     "localforage": ">=1.10.0"
