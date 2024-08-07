@@ -1,5 +1,6 @@
 import * as glob from "glob";
 import fs from "node:fs";
+import path from "node:path";
 
 /**
  *  上传静态资源文件
@@ -21,19 +22,19 @@ export async function uploadAssetsFiles({
   uploadFiles: (filePath: string, info: {}) => string | Promise<string>;
   mainJsNames: string[];
 }) {
-  const files = glob.sync(outDirPath + "/**/*", {
+  const files = glob.sync(path.join(outDirPath, "**/*"), {
     nodir: true,
     dot: true,
     ignore: uploadIgnore || "**/*.html",
   });
   const upLoadRes = await Promise.all(
     files.map(async (file) => ({
-      ossPath: await uploadFiles!(file, {}),
+      ossPath: await uploadFiles(file, {}),
       fileName: file.slice(outDirPath.length + 1),
     })),
   );
   // 替换本地文件名
-  const htmlFilePath = glob.sync(outDirPath + "**/*.html", {
+  const htmlFilePath = glob.sync(path.join(outDirPath, "**/*.html"), {
     nodir: true,
     dot: true,
   });

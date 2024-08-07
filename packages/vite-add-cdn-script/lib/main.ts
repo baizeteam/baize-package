@@ -44,7 +44,6 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       if (inHtmlJsName) {
         mainJsNames.push(...inHtmlJsName);
       }
-      // 打印控制器
       const external = _config.build?.rollupOptions?.external;
       if (!external) return html;
       try {

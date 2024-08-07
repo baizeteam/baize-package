@@ -54,8 +54,8 @@ class WebpackAddCdnScript {
 
     compiler.hooks.afterEmit.tapPromise(`${libName} upload`, async (compilation) => {
       try {
-        if (!compiler.options.output.path || !this.options.uploadFiles || !mainJsNames.length) return;
-        const outDirPath = path.resolve(normalizePath(compiler.options.output.path));
+        if (!this.options.uploadFiles || !mainJsNames.length) return;
+        const outDirPath = path.resolve(normalizePath(compiler.options.output.path || "dist"));
         uploadAssetsFiles({
           outDirPath,
           uploadFiles: this.options.uploadFiles,
