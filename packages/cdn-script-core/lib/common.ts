@@ -40,3 +40,32 @@ export function normalizePath(id: string): string {
 export function getScriptSrcs(html: string): string[] | null {
   return html.match(/(?<=<script.*?src=(["|']))(?=[./]).*?(?=\1)|(?<=<link.*?href=(["|']))(?=[./]).*?(?=\2)/g);
 }
+
+/**
+ *  Get the  script link tag and attrStr and href or src
+ * @param html html
+ * @returns  {
+ * tag: string;
+ * src: string;
+ * attrStr: string;
+ * }[]
+ */
+export function getLoadTagAndAttrStr(html: string): {
+  tag: string;
+  src: string;
+  attrStr: string;
+}[] {
+  const linkTagReg =
+    /(?<=<(script)(.*?)src=(["|']))(?=[./]).*?(?=\3([^><]*?)(?=\/?>))|(?<=<(link)(.*?)href=(["|']))(?=[./]).*?(?=\7([^><]*?)(?=\/?>))/g;
+  let loadTagMatch = [...html.matchAll(linkTagReg)];
+  return loadTagMatch.map((item) => {
+    const tag = item[1] || item[5];
+    const src = item[0];
+    const attrStr = item[2] + item[4] || item[6] + item[8];
+    return {
+      tag,
+      src,
+      attrStr,
+    };
+  });
+}
