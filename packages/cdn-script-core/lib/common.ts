@@ -32,15 +32,11 @@ export function normalizePath(id: string): string {
   return path.posix.normalize(isWindows ? slash(id) : id);
 }
 
-/**
- *  Get the script src in the html
- * @param html  html
- * @returns  script src
- */
-export function getScriptSrcs(html: string): string[] | null {
-  return html.match(/(?<=<script.*?src=(["|']))(?=[./]).*?(?=\1)|(?<=<link.*?href=(["|']))(?=[./]).*?(?=\2)/g);
-}
-
+export type loadTagAndAttrStrType = {
+  tag: string;
+  src: string;
+  attrStr: string;
+};
 /**
  *  Get the  script link tag and attrStr and href or src
  * @param html html
@@ -50,11 +46,7 @@ export function getScriptSrcs(html: string): string[] | null {
  * attrStr: string;
  * }[]
  */
-export function getLoadTagAndAttrStr(html: string): {
-  tag: string;
-  src: string;
-  attrStr: string;
-}[] {
+export function getLoadTagAndAttrStr(html: string): loadTagAndAttrStrType[] {
   const linkTagReg =
     /(?<=<(script)(.*?)src=(["|']))(?=[./]).*?(?=\3([^><]*?)(?=\/?>))|(?<=<(link)(.*?)href=(["|']))(?=[./]).*?(?=\7([^><]*?)(?=\/?>))/g;
   let loadTagMatch = [...html.matchAll(linkTagReg)];

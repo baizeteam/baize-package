@@ -1,7 +1,13 @@
 import { BuildOptions, PluginOption, UserConfig } from "vite";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
-import { getExternalScript, getScriptSrcs, normalizePath, uploadAssetsFiles } from "cdn-script-core";
+import {
+  getExternalScript,
+  getLoadTagAndAttrStr,
+  loadTagAndAttrStrType,
+  normalizePath,
+  uploadAssetsFiles,
+} from "cdn-script-core";
 
 import path from "node:path";
 function viteAddCdnScript(opt: IOptions): PluginOption {
@@ -9,7 +15,7 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
   let _config: UserConfig;
   let buildConfig: BuildOptions | undefined = undefined;
 
-  let mainJsNames: string[] = [];
+  let loadTagAndAttrs: loadTagAndAttrStrType[] = [];
   return {
     name: libName,
     enforce: EEnforce.PRE,
@@ -23,12 +29,12 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
       order: "post",
       async handler() {
         try {
-          if (!buildConfig || !opt.uploadFiles || !mainJsNames.length) return;
+          if (!buildConfig || !opt.uploadFiles || !loadTagAndAttrs.length) return;
           const outDirPath = normalizePath(path.resolve(normalizePath(buildConfig.outDir || "dist")));
           uploadAssetsFiles({
             outDirPath,
             uploadFiles: opt.uploadFiles,
-            mainJsNames,
+            loadTagAndAttrs,
             uploadIgnore: opt.uploadIgnore,
           });
         } catch (error) {
@@ -40,9 +46,9 @@ function viteAddCdnScript(opt: IOptions): PluginOption {
     async transformIndexHtml(html) {
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
       // 获取打包结果中的本地的js名字
-      const inHtmlJsName = getScriptSrcs(html);
-      if (inHtmlJsName) {
-        mainJsNames.push(...inHtmlJsName);
+      const inHtmlLoadTag = getLoadTagAndAttrStr(html);
+      if (inHtmlLoadTag) {
+        loadTagAndAttrs.push(...inHtmlLoadTag);
       }
       const external = _config.build?.rollupOptions?.external;
       if (!external) return html;

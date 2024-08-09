@@ -22,9 +22,9 @@
   ],
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/main.d.ts",
   "exports": {
-    "types": "./dist/index.d.ts",
+    "types": "./dist/main.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.umd.cjs"
   },
