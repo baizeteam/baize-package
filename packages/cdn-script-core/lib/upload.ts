@@ -53,7 +53,10 @@ export async function uploadAssetsFiles({
 
       html = html.replace(
         new RegExp(
-          `^\\s*<(\\w+)\\b.*${loadTagAndAttr.src.replace(/([\.|\/])/g, "\\$1")}[^>]*(?:\/>|>[*<]*<\/\\w+>|>)(?:\\s*$)?`,
+          `(?:^\\s*)?<(\\w+)\\b.*${loadTagAndAttr.src.replace(
+            /([\.|\/])/g,
+            "\\$1",
+          )}[^>]*(?:\/>|>[*<]*<\/\\w+>|>)(?:\\s*$)?`,
           "m",
         ),
         "",
