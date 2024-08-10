@@ -52,10 +52,12 @@ export async function uploadAssetsFiles({
       if (!findItem) continue;
 
       html = html.replace(
-        new RegExp(`<(\\w+)\\b.*${loadTagAndAttr.src.replace(/([\.|\/])/g, "\\$1")}[^>]*(?:\/>|>[*<]*<\/\\w+>|>)`, "g"),
+        new RegExp(
+          `^\\s*<(\\w+)\\b.*${loadTagAndAttr.src.replace(/([\.|\/])/g, "\\$1")}[^>]*(?:\/>|>[*<]*<\/\\w+>|>)(?:\\s*$)?`,
+          "m",
+        ),
         "",
       );
-
       uploadResLoadTag.push({
         key: loadTagAndAttr.src,
         tag: loadTagAndAttr.tag,
@@ -63,6 +65,7 @@ export async function uploadAssetsFiles({
         attrStr: loadTagAndAttr.attrStr,
       });
     }
+
     html = html.replace("</head>", `${generateScript(uploadResLoadTag)}</head>`);
     fs.writeFileSync(htmlFile, html);
   }
