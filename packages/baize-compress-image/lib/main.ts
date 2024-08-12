@@ -2,9 +2,9 @@
 import Worker from "./worker.ts?worker&inline";
 import { nanoid } from "nanoid";
 import localforage from "localforage";
-import { DEFAUTL_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config.ts";
+import { DEFAULT_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config.ts";
 
-const store = localforage.createInstance(DEFAUTL_FORAGE_CONFIG);
+const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
 
 const worker = new Worker();
 

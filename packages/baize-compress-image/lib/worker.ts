@@ -3,7 +3,7 @@ import "./localforage.min.js";
 import "./pako.min.js";
 import "./UPNG.min.js";
 import "localforage";
-import { DEFAUTL_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config.js";
+import { DEFAULT_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config.js";
 
 declare const localforage: LocalForage;
 declare const UPNG: any;
@@ -13,7 +13,7 @@ interface TaskType {
   quality: number;
 }
 
-const store = localforage.createInstance(DEFAUTL_FORAGE_CONFIG);
+const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
 
 // 利用OffscreenCanvas压缩jpeg图片
 const compressJpegImage = async ({ file, quality }) => {
