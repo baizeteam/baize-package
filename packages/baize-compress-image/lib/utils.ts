@@ -13,8 +13,12 @@ interface CompressOptions {
 type CompressSingleType = (file: File, options: CompressOptions) => Promise<File>;
 
 export const compressSingle: CompressSingleType = async (file, options) => {
+  // @ts-expect-error: signal留个坑
   const { quality = DEFAULT_QUALITY, signal } = options;
   checkImageType(file);
+  // TODO 检查图片大小
+  // 1. 如果图片大小小于一定值，不进行压缩，避免压缩后体积变大
+  // 2. 如果图片大小大于一定值，也不进行压缩，避免内存溢出
 
   const id = nanoid(8);
   const taskData = {
@@ -25,6 +29,7 @@ export const compressSingle: CompressSingleType = async (file, options) => {
   const taskId = `baize-compress-image-${id}`;
 
   const worker = new Worker();
+  // TODO indexDB存储，会有IO瓶颈问题，后续考虑使用PostMessage.Transferable传递数据
   const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
   await store.setItem(taskId, taskData);
 

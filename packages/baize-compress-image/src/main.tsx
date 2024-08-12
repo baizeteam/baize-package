@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import { ACCEPT_IMG_TYPES } from "../lib/config";
 import { compressImageWorker, compressImagesWorker } from "../lib/main";
 import { transformBytes2HumanRead } from "../lib/utils";
-// import { compressImageWorker } from "../dist/index.js";
+// import { compressImageWorker, compressImagesWorker } from "../dist/index.js";
 
 function App() {
   const [originalImageUrl, setOriginalImageUrl] = useState("");
