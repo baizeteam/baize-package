@@ -5,3 +5,5 @@ export const DEFAULT_FORAGE_CONFIG = {
 };
 
 export const DEFAULT_QUALITY = 0.8;
+
+export const ACCEPT_IMG_TYPES = ["image/jpeg", "image/png", "image/webp"];
