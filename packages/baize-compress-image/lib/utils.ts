@@ -1,8 +1,9 @@
+/// <reference types="localforage" />
+
 import { ACCEPT_IMG_TYPES, DEFAULT_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config";
 import Worker from "./worker.ts?worker&inline";
-import { nanoid } from "nanoid";
-import localforage from "localforage";
-
+import "./localforage.min.js";
+declare const localforage: LocalForage;
 interface CompressOptions {
   quality?: number;
   // TODO 需要支持“取消压缩”功能；实现方向可以参考：
@@ -20,7 +21,7 @@ export const compressSingle: CompressSingleType = async (file, options) => {
   // 1. 如果图片大小小于一定值，不进行压缩，避免压缩后体积变大
   // 2. 如果图片大小大于一定值，也不进行压缩，避免内存溢出
 
-  const id = nanoid(8);
+  const id = uuid();
   const taskData = {
     file,
     quality,
@@ -82,4 +83,11 @@ export const transformBytes2HumanRead = (bytes: number) => {
     bytesString = `${bytes}`;
   }
   return bytesString + " " + symbols[i];
+};
+
+export const uuid = () => {
+  const url = URL.createObjectURL(new Blob());
+  const uuid = url.slice(-36);
+  URL.revokeObjectURL(url);
+  return uuid;
 };

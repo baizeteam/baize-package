@@ -2,11 +2,13 @@
 import "./localforage.min.js";
 import "./pako.min.js";
 import "./UPNG.min.js";
+import { DEFAULT_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config";
+// type
 import "localforage";
-import { DEFAULT_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config.js";
+import upng from "upng-js";
 
 declare const localforage: LocalForage;
-declare const UPNG: any;
+declare const UPNG: typeof upng;
 interface TaskType {
   file: File;
   taskId: string;

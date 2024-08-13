@@ -1,1 +1,2 @@
-export function compressImageWorker(file: File, quality: number);
+export function compressImageWorker(file: File, quality?: number): Promise<File>;
+export function compressImagesWorker(files: File[], quality?: number): Promise<File[]>;
