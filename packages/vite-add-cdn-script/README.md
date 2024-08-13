@@ -77,10 +77,12 @@ export default defineConfig({
 
 options
 
-| 参数         | 解析                | 类型                        | 默认值                |
-| ------------ | ------------------- | --------------------------- | --------------------- |
-| customScript | 自定义 cdn 脚本     | { [*key*: string]: string } | 无                    |
-| defaultCdns  | 默认使用 cdn 的顺序 | string[]                    | ["jsdelivr", "unpkg"] |
+| 参数         | 解析                       | 类型                                            | 默认值                |
+| ------------ | -------------------------- | ----------------------------------------------- | --------------------- |
+| customScript | 自定义 cdn 脚本            | { [*key*: string]: string }                     | 无                    |
+| defaultCdns  | 默认使用 cdn 的顺序        | string[]                                        | ["jsdelivr", "unpkg"] |
+| uploadFiles  | 上传 oss 的函数            | (filePath: string) => string \| Promise<string> |                       |
+| uploadIgnore | 忽略文件类型 glob 匹配模式 | string                                          | "\*_/_.html"          |
 
 ## 注意事项
 

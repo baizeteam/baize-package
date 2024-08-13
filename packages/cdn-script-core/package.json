@@ -47,6 +47,8 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
+    "@types/glob": "^8.1.0",
+    "glob": "^11.0.0",
     "node-fetch": "2",
     "semver": "^7.6.2"
   }

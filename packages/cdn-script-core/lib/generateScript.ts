@@ -5,7 +5,7 @@
  * @return <script> 标签和错误处理脚本组成字符串
  */
 
-export function generateScript(urlListRes: { urls: string[]; key: string }[]): string {
+export function generateScript(urlListRes: { urls: string[]; key: string; tag?: string; attrStr?: string }[]): string {
   let script = "";
   const packNameUrl: { [k in string]?: string[] } = {};
   urlListRes.forEach((element) => {
@@ -14,7 +14,14 @@ export function generateScript(urlListRes: { urls: string[]; key: string }[]): s
 
     packNameUrl[key] = urls;
     const url = urls[0];
-    script += `<script src="${url}" type="text/javascript" crossorigin="anonymous" onerror="errorCDN(this)" data-cur="0"  data-key="${key}"></script>\n`;
+    if (element.tag === "script" || !element.tag) {
+      script += `<script src="${url}" type="text/javascript" crossorigin="anonymous" 
+      ${element.attrStr || ""}
+      onerror="errorCDN(this)" data-cur="0"  data-key="${key}" ></script>\n`;
+    } else {
+      script += `<link href="${url}" rel="stylesheet" type="text/css" crossorigin="anonymous" 
+      ${element.attrStr || ""} onerror="errorCDN(this)" data-cur="0"  data-key="${key}">\n`;
+    }
   });
   const errorScript = `<script>
     function errorCDN(e) {

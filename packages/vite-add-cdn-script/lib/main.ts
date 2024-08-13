@@ -1,22 +1,55 @@
-import { PluginOption, UserConfig } from "vite";
+import { BuildOptions, PluginOption, UserConfig } from "vite";
 import { EEnforce, IOptions } from "./types";
 import { libName } from "./config";
-import { getExternalScript } from "cdn-script-core";
+import {
+  getExternalScript,
+  getLoadTagAndAttrStr,
+  loadTagAndAttrStrType,
+  normalizePath,
+  uploadAssetsFiles,
+} from "cdn-script-core";
 
+import path from "node:path";
 function viteAddCdnScript(opt: IOptions): PluginOption {
   const { customScript = {}, defaultCdns = ["jsdelivr", "unpkg"] } = opt;
   let _config: UserConfig;
+  let buildConfig: BuildOptions | undefined = undefined;
 
+  let loadTagAndAttrs: loadTagAndAttrStrType[] = [];
   return {
     name: libName,
     enforce: EEnforce.PRE,
     apply: "build",
-    config(confing) {
-      _config = confing;
+    config(config) {
+      _config = config;
+      buildConfig = config.build;
+    },
+    closeBundle: {
+      sequential: true,
+      order: "post",
+      async handler() {
+        try {
+          if (!buildConfig || !opt.uploadFiles || !loadTagAndAttrs.length) return;
+          const outDirPath = normalizePath(path.resolve(normalizePath(buildConfig.outDir || "dist")));
+          uploadAssetsFiles({
+            outDirPath,
+            uploadFiles: opt.uploadFiles,
+            loadTagAndAttrs,
+            uploadIgnore: opt.uploadIgnore,
+          });
+        } catch (error) {
+          console.error(`${libName} error:`, (error as Error).message);
+          process.exit(1);
+        }
+      },
     },
     async transformIndexHtml(html) {
       if (!defaultCdns || defaultCdns.length === 0) throw new Error("defaultCdns不能为空");
-      // 打印控制器
+      // 获取打包结果中的本地的js名字
+      const inHtmlLoadTag = getLoadTagAndAttrStr(html);
+      if (inHtmlLoadTag) {
+        loadTagAndAttrs.push(...inHtmlLoadTag);
+      }
       const external = _config.build?.rollupOptions?.external;
       if (!external) return html;
       try {
