@@ -1,6 +1,7 @@
 # baize-compress-image
 
-对图片进行压缩的工具，它通过 web worker、离屏 canvas 等方式对图片进行压缩，加快压缩的效率，并且不会影响主线程的渲染，有效提升用户体验。
+对图片进行压缩的工具，它通过 web worker、离屏 canvas 等方式对图片进行压缩，加快压缩的效率。
+并且支持多worker批量压缩多个图片，不会影响主线程的渲染，有效提升用户体验。
 
 ## 开始
 
@@ -16,7 +17,7 @@ pnpm install baize-compress-image
 
 ```typescript
 import ReactDOM from "react-dom/client";
-import { compressImageWorker } from "baize-compress-image";
+import { compressImageWorker, compressImagesWorker } from "baize-compress-image";
 
 function App() {
 
@@ -25,9 +26,17 @@ function App() {
     const res = await compressImageWorker(file);
     console.log(res);
   };
+
+  const handleMultipleFileChange = async (e: any) => {
+    const files = Array.from(e.target.files);
+    const res = await compressImagesWorker(file);
+    console.log(res);
+  };
+
   return (
     <div>
         <input type="file" onChange={handleFileChange} />
+        <input type="file" multiple onChange={handleMultipleFileChange} />
     </div>
   );
 }
