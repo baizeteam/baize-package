@@ -68,7 +68,13 @@ function App() {
       const originalImages = Array.from(files);
       setOriginalImages(originalImages);
 
-      const compressedImages = await compressImagesWorker(originalImages);
+      const compressedImages = (await compressImagesWorker(originalImages)).map((res) => {
+        if (res.status === "rejected") {
+          console.error("Compression failed", res.reason);
+          return undefined;
+        }
+        return res.value;
+      });
       setCompressedImages(compressedImages);
 
       originalImages.forEach((file, index) => {
@@ -77,7 +83,7 @@ function App() {
 
       console.timeEnd("Compress Elapse");
     } catch (error) {
-      console.error("Compression failed:", error);
+      console.error("handleMultipleFileChange error:", error);
     }
   };
 

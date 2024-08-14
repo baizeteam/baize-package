@@ -2,20 +2,17 @@
 import "./localforage.min.js";
 import "./pako.min.js";
 import "./UPNG.min.js";
-import { DEFAULT_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config";
+import "./workerpool.min.js";
+import { DEFAULT_FORAGE_CONFIG } from "./config";
 // type
 import "localforage";
 import upng from "upng-js";
+import WorkerPool from "workerpool";
+import type { TaskType } from "./main";
 
 declare const localforage: LocalForage;
 declare const UPNG: typeof upng;
-interface TaskType {
-  file: File;
-  taskId: string;
-  quality: number;
-}
-
-const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
+declare const workerpool: typeof WorkerPool;
 
 // 利用OffscreenCanvas压缩jpeg图片
 const compressJpegImage = async ({ file, quality }) => {
@@ -52,27 +49,35 @@ const compressImage = async ({ file, quality }) => {
   }
 };
 
-self.onmessage = async (event) => {
-  const params = JSON.parse(event.data);
-  if (params.type === "compressImage") {
-    const taskData = (await store.getItem(params.taskId)) as TaskType;
-    await store.removeItem(params.taskId);
+const compressImageByTaskId = async (taskId) => {
+  const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
+
+  try {
+    const taskData = await store.getItem<TaskType>(taskId);
+    if (!taskData?.file) throw new Error("compress image not found");
+
     const file = taskData.file;
     const compressRes = await compressImage({
       file: file,
-      quality: taskData.quality || DEFAULT_QUALITY,
+      quality: taskData.quality,
     });
     if (compressRes.size < file.size) {
       // 压缩后大小小于原文件大小，则替换原文件
-      store.setItem(params.taskId, compressRes);
+      await store.setItem<TaskType>(taskId, {
+        file: compressRes,
+        quality: taskData.quality,
+      });
     } else {
-      store.setItem(params.taskId, file);
+      // 压缩后大小大于原文件大小，则保留原文件
+      // store.setItem(taskId, file);
     }
-    self.postMessage(
-      JSON.stringify({
-        type: "compressImageSuccess",
-        taskId: params.taskId,
-      }),
-    );
+  } catch (error) {
+    console.error("[baize-compress-image] compressImage error:", error);
+    await store.removeItem(taskId);
+    throw error;
   }
 };
+
+workerpool.worker({
+  compressImageByTaskId,
+});

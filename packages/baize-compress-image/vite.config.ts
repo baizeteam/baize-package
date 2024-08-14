@@ -27,7 +27,6 @@ const libConfig = {
           inlineDynamicImports: true,
         },
       },
-      external: ["localforage", "upng-js"],
     },
   },
 };

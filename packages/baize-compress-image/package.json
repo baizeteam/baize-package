@@ -27,14 +27,13 @@
     "@types/upng-js": "^2.1.5",
     "@vitejs/plugin-react": "^4.3.0",
     "cross-env": "^7.0.3",
+    "localforage": ">=1.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rollup-plugin-node-externals": "^7.1.2",
     "typescript": "^5.4.5",
-    "vite": "^5.2.10",
     "upng-js": "^2.1.0",
-    "localforage": ">=1.10.0"
-  },
-  "dependencies": {},
-  "peerDependencies": {}
+    "vite": "^5.2.10",
+    "workerpool": "^9.1.3"
+  }
 }
