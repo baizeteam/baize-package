@@ -14,6 +14,8 @@ const pageConfig = {
 };
 
 const libConfig = {
+  // [How to bundle a worker in library mode? · vitejs/vite · Discussion #15547](https://github.com/vitejs/vite/discussions/15547)
+  base: "./",
   build: {
     lib: {
       entry: "./lib/main.ts",
