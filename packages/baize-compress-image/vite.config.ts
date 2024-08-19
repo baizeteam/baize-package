@@ -22,12 +22,12 @@ const libConfig: UserConfig = {
       name: "index",
       fileName: "index",
     },
-    rollupOptions: {
-      plugins: [nodeExternals()],
-      output: {
-        inlineDynamicImports: true,
-      },
-    },
+    // rollupOptions: {
+    //   plugins: [nodeExternals()],
+    //   output: {
+    //     // inlineDynamicImports: true,
+    //   },
+    // },
   },
 };
 
