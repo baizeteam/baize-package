@@ -1,8 +1,8 @@
-import { defineConfig } from "vite";
+import { defineConfig, UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import nodeExternals from "rollup-plugin-node-externals";
 
-const pageConfig = {
+const pageConfig: UserConfig = {
   server: {
     port: 6103,
   },
@@ -13,7 +13,7 @@ const pageConfig = {
   },
 };
 
-const libConfig = {
+const libConfig: UserConfig = {
   // [How to bundle a worker in library mode? · vitejs/vite · Discussion #15547](https://github.com/vitejs/vite/discussions/15547)
   base: "./",
   build: {
@@ -24,10 +24,8 @@ const libConfig = {
     },
     rollupOptions: {
       plugins: [nodeExternals()],
-      extends: {
-        output: {
-          inlineDynamicImports: true,
-        },
+      output: {
+        inlineDynamicImports: true,
       },
     },
   },
