@@ -1,18 +1,10 @@
 // worker.ts
-import "./localforage.min.js";
-import "./pako.min.js";
-import "./UPNG.min.js";
-import "./workerpool.min.js";
 import { DEFAULT_FORAGE_CONFIG } from "./config";
-// type
-import "localforage";
-import upng from "upng-js";
-import WorkerPool from "workerpool";
+import localforage from "localforage";
+import UPNG from "upng-js";
+import workerpool from "workerpool";
 import type { TaskType } from "./main";
-
-declare const localforage: LocalForage;
-declare const UPNG: typeof upng;
-declare const workerpool: typeof WorkerPool;
+import { isJpeg, isPng, isWebp } from "./utils";
 
 // 利用OffscreenCanvas压缩jpeg图片
 const compressJpegImage = async ({ file, quality }) => {
@@ -39,10 +31,9 @@ const compressPngImage = async ({ file, quality }) => {
 };
 
 const compressImage = async ({ file, quality }) => {
-  const type = file.type.split("/")[1];
-  if (type === "jpeg" || type === "jpg" || type === "webp") {
+  if (isJpeg(file) || isWebp(file)) {
     return await compressJpegImage({ file, quality });
-  } else if (type === "png") {
+  } else if (isPng(file)) {
     return await compressPngImage({ file, quality });
   } else {
     throw new Error("Unsupported image type");

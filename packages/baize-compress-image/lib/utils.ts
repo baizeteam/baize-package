@@ -7,6 +7,18 @@ export const checkImageType = (file: File) => {
   }
 };
 
+export const isPng = (file: File) => {
+  return file.type === "image/png";
+};
+
+export const isJpeg = (file: File) => {
+  return file.type === "image/jpeg";
+};
+
+export const isWebp = (file: File) => {
+  return file.type === "image/webp";
+};
+
 export const checkImageSize = (file: File) => {
   // 检查图片大小
   if (file.size > MAX_IMG_SIZE) {
