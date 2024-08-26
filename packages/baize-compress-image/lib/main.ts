@@ -10,25 +10,30 @@ export interface TaskType {
   file: File;
   quality: number;
 }
-let POOL_INSTANCE: Pool | undefined;
-const getPool = () => {
-  if (!POOL_INSTANCE) {
-    POOL_INSTANCE = workerpool.pool(WorkerURL, {
-      workerOpts: {
-        type: import.meta.env.PROD ? undefined : "module",
-      },
-    });
-  }
-  return POOL_INSTANCE;
-};
-const terminatePool = (force = false) => {
-  if (POOL_INSTANCE) {
-    POOL_INSTANCE.terminate(force);
-    POOL_INSTANCE = undefined;
-  }
-};
 
-export const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promise<File> => {
+class PoolInstance {
+  private static instance: Pool | undefined;
+
+  public static getPool(): Pool {
+    if (!PoolInstance.instance) {
+      PoolInstance.instance = workerpool.pool(WorkerURL, {
+        workerOpts: {
+          type: import.meta.env.PROD ? undefined : "module",
+        },
+      });
+    }
+    return PoolInstance.instance;
+  }
+
+  public static terminatePool(force = false): void {
+    if (PoolInstance.instance) {
+      PoolInstance.instance.terminate(force);
+      PoolInstance.instance = undefined;
+    }
+  }
+}
+
+const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promise<File> => {
   // check
   checkImageType(file);
   checkImageSize(file);
@@ -42,19 +47,21 @@ export const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY)
   };
   // TODO indexDB存储，会有IO瓶颈问题，后续考虑使用PostMessage.Transferable传递数据
   const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
-  const pool = getPool();
+  const pool = PoolInstance.getPool();
 
   try {
     // compressing
     await store.setItem<TaskType>(taskId, taskData);
-    await pool.exec("compressImageByTaskId", [taskId]);
+    const promise = pool.exec("compressImageByTaskId", [taskId]);
+    // TODO 后续把 promise.cancel(); 这个API暴露出来
+    await promise;
     // result
     const compressRes = await store.getItem<TaskType>(taskId);
     if (!compressRes) throw new Error("compressImageWorker failed");
     // reset
     store.removeItem(taskId);
     setTimeout(() => {
-      if (pool.stats().busyWorkers === 0) terminatePool();
+      if (pool.stats().busyWorkers === 0) PoolInstance.terminatePool();
     }, 1000);
     // return
     return compressRes.file;
@@ -62,7 +69,7 @@ export const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY)
     // reset
     store.removeItem(taskId);
     setTimeout(() => {
-      if (pool.stats().busyWorkers === 0) terminatePool();
+      if (pool.stats().busyWorkers === 0) PoolInstance.terminatePool();
     }, 1000);
     // throw
     throw error;
@@ -89,5 +96,5 @@ export const compressImagesWorker = async (files: File[], quality = DEFAULT_QUAL
 };
 
 export const cancelAllCompressWorker = () => {
-  terminatePool(true);
+  PoolInstance.terminatePool(true);
 };
