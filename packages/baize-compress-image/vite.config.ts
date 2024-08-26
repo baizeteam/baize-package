@@ -11,6 +11,9 @@ const pageConfig: UserConfig = {
   build: {
     outDir: "dist-page",
   },
+  optimizeDeps: {
+    include: ["localforage", "workerpool", "upng-js"],
+  },
 };
 
 const libConfig: UserConfig = {

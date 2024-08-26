@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import { ACCEPT_IMG_TYPES } from "../lib/config";
-import { compressImageWorker, compressImagesWorker } from "../lib/main";
+import { compressImagesWorker } from "../lib/main";
 import { transformBytes2HumanRead } from "../lib/utils";
-// import { compressImageWorker, compressImagesWorker } from "../dist/index.js";
+// import { compressImagesWorker } from "../dist/index.js";
 
 function App() {
-  const [originalImageUrl, setOriginalImageUrl] = useState("");
-  const [compressedImageUrl, setCompressedImageUrl] = useState("");
   const [originalImages, setOriginalImages] = useState<File[]>([]);
   const [compressedImages, setCompressedImages] = useState<Array<File | undefined>>([]);
 
@@ -29,31 +27,6 @@ function App() {
         originalSize,
       )}, Compressed: ${transformBytes2HumanRead(compressedSize)}`,
     );
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) {
-      return;
-    }
-
-    const file = files[0];
-    try {
-      console.time("Compress Elapse");
-      const compressedFile = await compressImageWorker(file);
-
-      const originalUrl = URL.createObjectURL(file);
-      setOriginalImageUrl(originalUrl);
-
-      const compressedUrl = URL.createObjectURL(compressedFile);
-      setCompressedImageUrl(compressedUrl);
-
-      commonLog(file, compressedFile);
-
-      console.timeEnd("Compress Elapse");
-    } catch (error) {
-      console.error("Compression failed:", error);
-    }
   };
 
   const handleMultipleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,23 +70,6 @@ function App() {
           display: "flex",
         }}
       >
-        {/* Left */}
-        <div
-          style={{
-            flex: 1,
-          }}
-        >
-          <input accept={ACCEPT_IMG_TYPES.join(",")} type="file" onChange={handleFileChange} />
-          <div style={{ display: originalImageUrl ? "block" : "none" }}>
-            <h2>原图</h2>
-            <img src={originalImageUrl} style={{ maxHeight: "200px" }} alt="Original Image" />
-          </div>
-          <div style={{ display: originalImageUrl ? "block" : "none" }}>
-            <h2>压缩图</h2>
-            <img src={compressedImageUrl} style={{ maxHeight: "200px" }} alt="Compressed Image" />
-          </div>
-        </div>
-        {/* Right */}
         <div
           style={{
             flex: 1,

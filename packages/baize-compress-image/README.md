@@ -17,15 +17,9 @@ pnpm install baize-compress-image
 
 ```typescript
 import ReactDOM from "react-dom/client";
-import { compressImageWorker, compressImagesWorker } from "baize-compress-image";
+import { compressImagesWorker } from "baize-compress-image";
 
 function App() {
-
-  const handleFileChange = async (e: any) => {
-    const file = e.target.files[0];
-    const res = await compressImageWorker(file);
-    console.log(res);
-  };
 
   const handleMultipleFileChange = async (e: any) => {
     const files = Array.from(e.target.files);
@@ -35,7 +29,6 @@ function App() {
 
   return (
     <div>
-        <input type="file" onChange={handleFileChange} />
         <input type="file" multiple onChange={handleMultipleFileChange} />
     </div>
   );
