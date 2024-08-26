@@ -6,8 +6,13 @@ import workerpool from "workerpool";
 import type { TaskType } from "./main";
 import { isJpeg, isPng, isWebp } from "./utils";
 
+type CompressParamsType = {
+  file: File;
+  quality: number;
+};
+
 // 利用OffscreenCanvas压缩jpeg图片
-const compressJpegImage = async ({ file, quality }) => {
+const compressJpegImage = async ({ file, quality }: CompressParamsType) => {
   const img = file.slice(0, file.size, file.type);
   const offscreen = new OffscreenCanvas(100, 100);
   const ctx = offscreen.getContext("2d") as OffscreenCanvasRenderingContext2D;
@@ -21,7 +26,7 @@ const compressJpegImage = async ({ file, quality }) => {
 };
 
 // 利用UPNG压缩png图片
-const compressPngImage = async ({ file, quality }) => {
+const compressPngImage = async ({ file, quality }: CompressParamsType) => {
   const arrayBuffer = await file.arrayBuffer();
   const decoded = UPNG.decode(arrayBuffer);
   const rgba8 = UPNG.toRGBA8(decoded);
@@ -30,7 +35,7 @@ const compressPngImage = async ({ file, quality }) => {
   return compressFile;
 };
 
-const compressImage = async ({ file, quality }) => {
+const compressImage = async ({ file, quality }: CompressParamsType) => {
   if (isJpeg(file) || isWebp(file)) {
     return await compressJpegImage({ file, quality });
   } else if (isPng(file)) {
@@ -40,7 +45,7 @@ const compressImage = async ({ file, quality }) => {
   }
 };
 
-const compressImageByTaskId = async (taskId) => {
+const compressImageByTaskId = async (taskId: string) => {
   const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
 
   try {
