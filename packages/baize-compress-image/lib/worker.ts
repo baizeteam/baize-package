@@ -1,22 +1,18 @@
 // worker.ts
-import "./localforage.min.js";
-import "./pako.min.js";
-import "./UPNG.min.js";
-import "localforage";
-import { DEFAUTL_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config.js";
+import { DEFAULT_FORAGE_CONFIG } from "./config";
+import localforage from "localforage";
+import UPNG from "upng-js";
+import workerpool from "workerpool";
+import type { TaskType } from "./main";
+import { isJpeg, isPng, isWebp } from "./utils";
 
-declare const localforage: LocalForage;
-declare const UPNG: any;
-interface TaskType {
+type CompressParamsType = {
   file: File;
-  taskId: string;
   quality: number;
-}
-
-const store = localforage.createInstance(DEFAUTL_FORAGE_CONFIG);
+};
 
 // 利用OffscreenCanvas压缩jpeg图片
-const compressJpegImage = async ({ file, quality }) => {
+const compressJpegImage = async ({ file, quality }: CompressParamsType) => {
   const img = file.slice(0, file.size, file.type);
   const offscreen = new OffscreenCanvas(100, 100);
   const ctx = offscreen.getContext("2d") as OffscreenCanvasRenderingContext2D;
@@ -30,7 +26,7 @@ const compressJpegImage = async ({ file, quality }) => {
 };
 
 // 利用UPNG压缩png图片
-const compressPngImage = async ({ file, quality }) => {
+const compressPngImage = async ({ file, quality }: CompressParamsType) => {
   const arrayBuffer = await file.arrayBuffer();
   const decoded = UPNG.decode(arrayBuffer);
   const rgba8 = UPNG.toRGBA8(decoded);
@@ -39,38 +35,45 @@ const compressPngImage = async ({ file, quality }) => {
   return compressFile;
 };
 
-const compressImage = async ({ file, quality }) => {
-  const type = file.type.split("/")[1];
-  if (type === "jpeg" || type === "jpg" || type === "webp") {
+const compressImage = async ({ file, quality }: CompressParamsType) => {
+  if (isJpeg(file) || isWebp(file)) {
     return await compressJpegImage({ file, quality });
-  } else if (type === "png") {
+  } else if (isPng(file)) {
     return await compressPngImage({ file, quality });
   } else {
     throw new Error("Unsupported image type");
   }
 };
 
-self.onmessage = async (event) => {
-  const params = JSON.parse(event.data);
-  if (params.type === "compressImage") {
-    const taskData = (await store.getItem(params.taskId)) as TaskType;
-    await store.removeItem(params.taskId);
+const compressImageByTaskId = async (taskId: string) => {
+  const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
+
+  try {
+    const taskData = await store.getItem<TaskType>(taskId);
+    if (!taskData?.file) throw new Error("compress image not found");
+
     const file = taskData.file;
     const compressRes = await compressImage({
       file: file,
-      quality: taskData.quality || DEFAULT_QUALITY,
+      quality: taskData.quality,
     });
     if (compressRes.size < file.size) {
       // 压缩后大小小于原文件大小，则替换原文件
-      store.setItem(params.taskId, compressRes);
+      await store.setItem<TaskType>(taskId, {
+        file: compressRes,
+        quality: taskData.quality,
+      });
     } else {
-      store.setItem(params.taskId, file);
+      // 压缩后大小大于原文件大小，则保留原文件
+      // store.setItem(taskId, file);
     }
-    self.postMessage(
-      JSON.stringify({
-        type: "compressImageSuccess",
-        taskId: params.taskId,
-      }),
-    );
+  } catch (error) {
+    console.error("[baize-compress-image] compressImage error:", error);
+    await store.removeItem(taskId);
+    throw error;
   }
 };
+
+workerpool.worker({
+  compressImageByTaskId,
+});
