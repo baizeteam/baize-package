@@ -1,6 +1,6 @@
 {
   "name": "baize-compress-image",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "files": [
     "dist",
@@ -27,7 +27,6 @@
     "@types/upng-js": "^2.1.5",
     "@vitejs/plugin-react": "^4.3.0",
     "cross-env": "^7.0.3",
-    "localforage": ">=1.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rollup-plugin-node-externals": "^7.1.2",

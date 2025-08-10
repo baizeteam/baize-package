@@ -1,14 +1,21 @@
 // main.ts
-import { DEFAULT_FORAGE_CONFIG, DEFAULT_QUALITY } from "./config.ts";
-import { checkImageSize, checkImageType, uuid } from "./utils.ts";
+import { DEFAULT_QUALITY } from "./config.ts";
+import { checkImageSize, checkImageType } from "./utils.ts";
 import WorkerURL from "./worker.ts?worker&url";
-import localforage from "localforage";
 import workerpool from "workerpool";
 import type { Pool } from "workerpool";
 
 export interface TaskType {
   file: File;
   quality: number;
+}
+
+export interface CompressResult {
+  success: boolean;
+  data?: ArrayBuffer;
+  fileName?: string;
+  fileType?: string;
+  error?: string;
 }
 
 class PoolInstance {
@@ -38,40 +45,36 @@ const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promi
   checkImageType(file);
   checkImageSize(file);
 
-  // init
-  const id = uuid();
-  const taskId = `baize-compress-image-${id}`;
-  const taskData = {
-    file,
-    quality,
-  };
-  // TODO indexDB存储，会有IO瓶颈问题，后续考虑使用PostMessage.Transferable传递数据
-  const store = localforage.createInstance(DEFAULT_FORAGE_CONFIG);
   const pool = PoolInstance.getPool();
 
   try {
-    // compressing
-    await store.setItem<TaskType>(taskId, taskData);
-    const promise = pool.exec("compressImageByTaskId", [taskId]);
-    // TODO 后续把 promise.cancel(); 这个API暴露出来
-    await promise;
-    // result
-    const compressRes = await store.getItem<TaskType>(taskId);
-    if (!compressRes) throw new Error("compressImageWorker failed");
-    // reset
-    store.removeItem(taskId);
+    // 将文件转换为 ArrayBuffer 以便传输
+    const arrayBuffer = await file.arrayBuffer();
+
+    // 使用 Transferable Objects 传递数据
+    const result = (await pool.exec("compressImage", [arrayBuffer, file.name, file.type, quality], {
+      transfer: [arrayBuffer],
+    })) as CompressResult;
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || "压缩失败");
+    }
+
+    // 清理资源
     setTimeout(() => {
       if (pool.stats().busyWorkers === 0) PoolInstance.terminatePool();
     }, 1000);
-    // return
-    return compressRes.file;
+
+    // 重新构造 File 对象
+    return new File([result.data], result.fileName || file.name, {
+      type: result.fileType || file.type,
+    });
   } catch (error) {
-    // reset
-    store.removeItem(taskId);
+    // 清理资源
     setTimeout(() => {
       if (pool.stats().busyWorkers === 0) PoolInstance.terminatePool();
     }, 1000);
-    // throw
+
     throw error;
   }
 };
