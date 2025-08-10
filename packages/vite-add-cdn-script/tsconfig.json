@@ -36,6 +36,7 @@
     "esm": true
   },
   "include": [
-    "src"
+    "src",
+    "lib"
   ]
 }

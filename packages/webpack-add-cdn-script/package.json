@@ -36,6 +36,7 @@
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@rspack/cli": "^0.7.5",
+    "@rspack/core": "^0.7.5",
     "@types/node": "^20.14.2",
     "@types/node-fetch": "2",
     "@types/react": "^18.3.2",
@@ -55,7 +56,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
     "vite": "^5.2.11",
-    "@rspack/core": "^0.7.5",
     "vite-plugin-dts": "^3.9.1",
     "webpack-sources": "^3.2.3"
   },
@@ -63,7 +63,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "cdn-script-core": "workspace:*"
+    "@types/webpack": "^5.28.5",
+    "cdn-script-core": "workspace:*",
+    "webpack": "^5.93.0"
   },
   "peerDependencies": {
     "webpack": ">=5.0.0"
