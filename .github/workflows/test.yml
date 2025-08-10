@@ -1,7 +1,7 @@
 name: Run Tests on Push and Pull Request
-# on:
-#   push:
-#   pull_request:
+on:
+  push:
+  pull_request:
 
 jobs:
   test:
