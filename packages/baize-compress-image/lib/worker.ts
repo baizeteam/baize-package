@@ -1,6 +1,5 @@
 // worker.ts
 import UPNG from "upng-js";
-import workerpool from "workerpool";
 import { isJpeg, isPng, isWebp } from "./utils";
 
 export interface CompressResult {
@@ -94,6 +93,19 @@ const compressImage = async (
   }
 };
 
-workerpool.worker({
-  compressImage,
+// 监听主线程消息
+self.addEventListener("message", async (event) => {
+  const { type, arrayBuffer, fileName, fileType, quality } = event.data;
+
+  if (type === "compressImage") {
+    try {
+      const result = await compressImage(arrayBuffer, fileName, fileType, quality);
+      self.postMessage(result);
+    } catch (error) {
+      self.postMessage({
+        success: false,
+        error: error instanceof Error ? error.message : "压缩失败",
+      });
+    }
+  }
 });

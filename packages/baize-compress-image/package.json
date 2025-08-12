@@ -1,6 +1,6 @@
 {
   "name": "baize-compress-image",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "files": [
     "dist",
@@ -32,7 +32,6 @@
     "rollup-plugin-node-externals": "^7.1.2",
     "typescript": "^5.4.5",
     "upng-js": "^2.1.0",
-    "vite": "^5.2.10",
-    "workerpool": "^9.1.3"
+    "vite": "^5.2.10"
   }
 }

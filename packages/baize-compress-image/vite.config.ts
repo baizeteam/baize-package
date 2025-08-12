@@ -12,7 +12,7 @@ const pageConfig: UserConfig = {
     outDir: "dist-page",
   },
   optimizeDeps: {
-    include: ["localforage", "workerpool", "upng-js"],
+    include: ["upng-js"],
   },
 };
 
