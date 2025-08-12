@@ -1,9 +1,7 @@
 // main.ts
 import { DEFAULT_QUALITY } from "./config.ts";
 import { checkImageSize, checkImageType } from "./utils.ts";
-import WorkerURL from "./worker.ts?worker&url";
-import workerpool from "workerpool";
-import type { Pool } from "workerpool";
+import CompressWorker from "./worker.ts?worker&inline";
 
 export interface TaskType {
   file: File;
@@ -18,25 +16,89 @@ export interface CompressResult {
   error?: string;
 }
 
-class PoolInstance {
-  private static instance: Pool | undefined;
+class WorkerManager {
+  private static instance: WorkerManager | undefined;
+  private worker: Worker | null = null;
+  private isProcessing = false;
 
-  public static getPool(): Pool {
-    if (!PoolInstance.instance) {
-      PoolInstance.instance = workerpool.pool(WorkerURL, {
-        workerOpts: {
-          type: import.meta.env.PROD ? undefined : "module",
-        },
-      });
+  public static getInstance(): WorkerManager {
+    if (!WorkerManager.instance) {
+      WorkerManager.instance = new WorkerManager();
     }
-    return PoolInstance.instance;
+    return WorkerManager.instance;
   }
 
-  public static terminatePool(force = false): void {
-    if (PoolInstance.instance) {
-      PoolInstance.instance.terminate(force);
-      PoolInstance.instance = undefined;
+  private createWorker(): Worker {
+    if (!this.worker) {
+      this.worker = new CompressWorker();
     }
+    return this.worker;
+  }
+
+  public async executeTask(
+    arrayBuffer: ArrayBuffer,
+    fileName: string,
+    fileType: string,
+    quality: number,
+  ): Promise<CompressResult> {
+    if (this.isProcessing) {
+      throw new Error("Worker is busy, please try again later");
+    }
+
+    this.isProcessing = true;
+    const worker = this.createWorker();
+
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Worker timeout"));
+        this.isProcessing = false;
+      }, 30000); // 30秒超时
+
+      const handleMessage = (event: MessageEvent) => {
+        clearTimeout(timeoutId);
+        this.isProcessing = false;
+        worker.removeEventListener("message", handleMessage);
+        worker.removeEventListener("error", handleError);
+
+        const result = event.data as CompressResult;
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error(result.error || "压缩失败"));
+        }
+      };
+
+      const handleError = (error: ErrorEvent) => {
+        clearTimeout(timeoutId);
+        this.isProcessing = false;
+        worker.removeEventListener("message", handleMessage);
+        worker.removeEventListener("error", handleError);
+        reject(new Error(`Worker error: ${error.message}`));
+      };
+
+      worker.addEventListener("message", handleMessage);
+      worker.addEventListener("error", handleError);
+
+      // 发送数据到 worker
+      worker.postMessage(
+        {
+          type: "compressImage",
+          arrayBuffer,
+          fileName,
+          fileType,
+          quality,
+        },
+        [arrayBuffer],
+      ); // 使用 Transferable Objects
+    });
+  }
+
+  public terminate(): void {
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
+    }
+    this.isProcessing = false;
   }
 }
 
@@ -45,36 +107,24 @@ const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promi
   checkImageType(file);
   checkImageSize(file);
 
-  const pool = PoolInstance.getPool();
+  const workerManager = WorkerManager.getInstance();
 
   try {
     // 将文件转换为 ArrayBuffer 以便传输
     const arrayBuffer = await file.arrayBuffer();
 
-    // 使用 Transferable Objects 传递数据
-    const result = (await pool.exec("compressImage", [arrayBuffer, file.name, file.type, quality], {
-      transfer: [arrayBuffer],
-    })) as CompressResult;
+    // 使用 worker 压缩图片
+    const result = await workerManager.executeTask(arrayBuffer, file.name, file.type, quality);
 
     if (!result.success || !result.data) {
       throw new Error(result.error || "压缩失败");
     }
-
-    // 清理资源
-    setTimeout(() => {
-      if (pool.stats().busyWorkers === 0) PoolInstance.terminatePool();
-    }, 1000);
 
     // 重新构造 File 对象
     return new File([result.data], result.fileName || file.name, {
       type: result.fileType || file.type,
     });
   } catch (error) {
-    // 清理资源
-    setTimeout(() => {
-      if (pool.stats().busyWorkers === 0) PoolInstance.terminatePool();
-    }, 1000);
-
     throw error;
   }
 };
@@ -99,5 +149,5 @@ export const compressImagesWorker = async (files: File[], quality = DEFAULT_QUAL
 };
 
 export const cancelAllCompressWorker = () => {
-  PoolInstance.terminatePool(true);
+  WorkerManager.getInstance().terminate();
 };
