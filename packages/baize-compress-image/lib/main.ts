@@ -16,10 +16,26 @@ export interface CompressResult {
   error?: string;
 }
 
+interface QueuedTask {
+  arrayBuffer: ArrayBuffer;
+  fileName: string;
+  fileType: string;
+  quality: number;
+  resolve: (value: CompressResult) => void;
+  reject: (reason: any) => void;
+}
+
 class WorkerManager {
   private static instance: WorkerManager | undefined;
-  private worker: Worker | null = null;
-  private isProcessing = false;
+  private workers: Worker[] = [];
+  private taskQueue: QueuedTask[] = [];
+  private maxWorkers: number;
+  private activeWorkers: Set<Worker> = new Set();
+
+  constructor(maxWorkers = 2) {
+    this.maxWorkers = maxWorkers;
+    this.initializeWorkers();
+  }
 
   public static getInstance(): WorkerManager {
     if (!WorkerManager.instance) {
@@ -28,35 +44,51 @@ class WorkerManager {
     return WorkerManager.instance;
   }
 
-  private createWorker(): Worker {
-    if (!this.worker) {
-      this.worker = new CompressWorker();
+  private initializeWorkers(): void {
+    for (let i = 0; i < this.maxWorkers; i++) {
+      const worker = new CompressWorker();
+      this.workers.push(worker);
     }
-    return this.worker;
   }
 
-  public async executeTask(
-    arrayBuffer: ArrayBuffer,
-    fileName: string,
-    fileType: string,
-    quality: number,
-  ): Promise<CompressResult> {
-    if (this.isProcessing) {
-      throw new Error("Worker is busy, please try again later");
+  private getAvailableWorker(): Worker | null {
+    return this.workers.find((worker) => !this.activeWorkers.has(worker)) || null;
+  }
+
+  private processNextTask(): void {
+    if (this.taskQueue.length === 0) return;
+
+    const availableWorker = this.getAvailableWorker();
+    if (!availableWorker) return;
+
+    const task = this.taskQueue.shift()!;
+    this.executeTaskWithWorker(availableWorker, task);
+  }
+
+  private async executeTaskWithWorker(worker: Worker, task: QueuedTask): Promise<void> {
+    this.activeWorkers.add(worker);
+
+    try {
+      const result = await this.runWorkerTask(worker, task);
+      task.resolve(result);
+    } catch (error) {
+      task.reject(error);
+    } finally {
+      this.activeWorkers.delete(worker);
+      this.processNextTask(); // 处理队列中的下一个任务
     }
+  }
 
-    this.isProcessing = true;
-    const worker = this.createWorker();
-
+  private runWorkerTask(worker: Worker, task: QueuedTask): Promise<CompressResult> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error("Worker timeout"));
-        this.isProcessing = false;
+        this.activeWorkers.delete(worker);
+        this.processNextTask();
       }, 30000); // 30秒超时
 
       const handleMessage = (event: MessageEvent) => {
         clearTimeout(timeoutId);
-        this.isProcessing = false;
         worker.removeEventListener("message", handleMessage);
         worker.removeEventListener("error", handleError);
 
@@ -70,7 +102,6 @@ class WorkerManager {
 
       const handleError = (error: ErrorEvent) => {
         clearTimeout(timeoutId);
-        this.isProcessing = false;
         worker.removeEventListener("message", handleMessage);
         worker.removeEventListener("error", handleError);
         reject(new Error(`Worker error: ${error.message}`));
@@ -83,22 +114,74 @@ class WorkerManager {
       worker.postMessage(
         {
           type: "compressImage",
+          arrayBuffer: task.arrayBuffer,
+          fileName: task.fileName,
+          fileType: task.fileType,
+          quality: task.quality,
+        },
+        [task.arrayBuffer], // 使用 Transferable Objects
+      );
+    });
+  }
+
+  public async executeTask(
+    arrayBuffer: ArrayBuffer,
+    fileName: string,
+    fileType: string,
+    quality: number,
+  ): Promise<CompressResult> {
+    const availableWorker = this.getAvailableWorker();
+
+    if (availableWorker) {
+      // 如果有可用的 worker，直接执行
+      return new Promise((resolve, reject) => {
+        const task: QueuedTask = {
           arrayBuffer,
           fileName,
           fileType,
           quality,
-        },
-        [arrayBuffer],
-      ); // 使用 Transferable Objects
-    });
+          resolve,
+          reject,
+        };
+        this.executeTaskWithWorker(availableWorker, task);
+      });
+    } else {
+      // 如果没有可用的 worker，将任务加入队列
+      return new Promise((resolve, reject) => {
+        const task: QueuedTask = {
+          arrayBuffer,
+          fileName,
+          fileType,
+          quality,
+          resolve,
+          reject,
+        };
+        this.taskQueue.push(task);
+      });
+    }
+  }
+
+  public getQueueLength(): number {
+    return this.taskQueue.length;
+  }
+
+  public getActiveWorkerCount(): number {
+    return this.activeWorkers.size;
   }
 
   public terminate(): void {
-    if (this.worker) {
-      this.worker.terminate();
-      this.worker = null;
-    }
-    this.isProcessing = false;
+    // 清空任务队列
+    this.taskQueue.forEach((task) => {
+      task.reject(new Error("Worker manager terminated"));
+    });
+    this.taskQueue = [];
+
+    // 终止所有 worker
+    this.workers.forEach((worker) => {
+      worker.terminate();
+    });
+    this.workers = [];
+    this.activeWorkers.clear();
   }
 }
 
