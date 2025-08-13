@@ -1,6 +1,6 @@
 {
   "name": "baize-compress-image",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "keywords": [
     "compress",
