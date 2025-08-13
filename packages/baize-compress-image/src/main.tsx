@@ -99,7 +99,7 @@ function App() {
                 <img
                   key={index}
                   src={URL.createObjectURL(file)}
-                  style={{ display: "block", maxHeight: "200px" }}
+                  style={{ display: "block", maxHeight: "400px" }}
                   alt="Original Image"
                 />
               ))}
@@ -115,7 +115,7 @@ function App() {
                   <img
                     key={index}
                     src={URL.createObjectURL(file || originalImages[index])}
-                    style={{ display: "block", maxHeight: "200px", filter: file ? undefined : "brightness(0.3)" }}
+                    style={{ display: "block", maxHeight: "400px", filter: file ? undefined : "brightness(0.3)" }}
                     alt="Compressed Image"
                   />
                 );
