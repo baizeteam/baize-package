@@ -1,5 +1,9 @@
 # baize-compress-image
 
+## 0.0.7
+
+修复并发压缩问题
+
 ## 0.0.6
 
 移除 workerpool 修复使用异常报错问题
