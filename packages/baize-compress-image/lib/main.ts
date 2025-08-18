@@ -3,6 +3,16 @@ import { DEFAULT_QUALITY } from "./config.ts";
 import { checkImageSize, checkImageType } from "./utils.ts";
 import CompressWorker from "./worker.ts?worker&inline";
 
+export interface CompressBackInfo {
+  compressInfo: {
+    rate: number;
+    time: number;
+    originalSize: number;
+    compressedSize: number;
+  };
+  file: File;
+}
+
 export interface TaskType {
   file: File;
   quality: number;
@@ -185,16 +195,18 @@ class WorkerManager {
   }
 }
 
-const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promise<File> => {
+const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promise<CompressBackInfo> => {
   // check
   checkImageType(file);
   checkImageSize(file);
 
   const workerManager = WorkerManager.getInstance();
+  const startTime = performance.now();
 
   try {
     // 将文件转换为 ArrayBuffer 以便传输
     const arrayBuffer = await file.arrayBuffer();
+    const originalSize = arrayBuffer.byteLength;
 
     // 使用 worker 压缩图片
     const result = await workerManager.executeTask(arrayBuffer, file.name, file.type, quality);
@@ -203,16 +215,36 @@ const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promi
       throw new Error(result.error || "压缩失败");
     }
 
+    const endTime = performance.now();
+    const compressTime = endTime - startTime;
+
+    // 计算压缩率
+    const compressedSize = result.data.byteLength;
+    const compressRate = originalSize > 0 ? ((originalSize - compressedSize) / originalSize) * 100 : 0;
+
     // 重新构造 File 对象
-    return new File([result.data], result.fileName || file.name, {
+    const compressedFile = new File([result.data], result.fileName || file.name, {
       type: result.fileType || file.type,
     });
+
+    return {
+      compressInfo: {
+        rate: Math.round(compressRate * 100) / 100, // 保留两位小数
+        time: compressTime,
+        originalSize: originalSize,
+        compressedSize: compressedSize,
+      },
+      file: compressedFile,
+    };
   } catch (error) {
     throw error;
   }
 };
 
-export const compressImagesWorker = async (files: File[], quality = DEFAULT_QUALITY) => {
+export const compressImagesWorker = async (
+  files: File[],
+  quality = DEFAULT_QUALITY,
+): Promise<PromiseSettledResult<CompressBackInfo>[]> => {
   let allSettled: typeof Promise.allSettled;
   // polyfill
   if (!Promise.allSettled) {

@@ -2,31 +2,18 @@ import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import { ACCEPT_IMG_TYPES } from "../lib/config";
 import { compressImagesWorker } from "../lib/main";
-import { transformBytes2HumanRead } from "../lib/utils";
-// import { compressImagesWorker } from "../dist/index.js";
 
 function App() {
   const [originalImages, setOriginalImages] = useState<File[]>([]);
   const [compressedImages, setCompressedImages] = useState<Array<File | undefined>>([]);
+  const [compressionInfo, setCompressionInfo] = useState<
+    Array<{ rate: number; time: number; originalSize: number; compressedSize: number } | undefined>
+  >([]);
 
   const reset = () => {
     setOriginalImages([]);
     setCompressedImages([]);
-  };
-
-  const commonLog = (file: File, compressedFile?: File) => {
-    if (!compressedFile) return console.error("Compression failed", file);
-
-    console.log(`%c [ res ]-${file.name}`, "font-size:13px; background:pink; color:#bf2c9f;", compressedFile);
-
-    const originalSize = file.size;
-    const compressedSize = compressedFile.size;
-    const rate = ((originalSize - compressedSize) / originalSize) * 100;
-    console.log(
-      `Compress Rate: ${rate.toFixed(2)}%. Original: ${transformBytes2HumanRead(
-        originalSize,
-      )}, Compressed: ${transformBytes2HumanRead(compressedSize)}`,
-    );
+    setCompressionInfo([]);
   };
 
   const handleMultipleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,18 +28,24 @@ function App() {
       const originalImages = Array.from(files);
       setOriginalImages(originalImages);
 
-      const compressedImages = (await compressImagesWorker(originalImages)).map((res) => {
+      const compressionResults = await compressImagesWorker(originalImages, 0.5);
+
+      const compressedImages = compressionResults.map((res) => {
         if (res.status === "rejected") {
           console.error("Compression failed", res.reason);
           return undefined;
         }
-        return res.value;
+        return res.value.file;
       });
       setCompressedImages(compressedImages);
 
-      originalImages.forEach((file, index) => {
-        commonLog(file, compressedImages[index]);
+      const compressionInfo = compressionResults.map((res) => {
+        if (res.status === "rejected") {
+          return undefined;
+        }
+        return res.value.compressInfo;
       });
+      setCompressionInfo(compressionInfo);
 
       console.timeEnd("Compress Elapse");
     } catch (error) {
@@ -111,13 +104,23 @@ function App() {
             >
               <h2>压缩图</h2>
               {compressedImages.map((file, index) => {
+                const info = compressionInfo[index];
                 return (
-                  <img
-                    key={index}
-                    src={URL.createObjectURL(file || originalImages[index])}
-                    style={{ display: "block", maxHeight: "400px", filter: file ? undefined : "brightness(0.3)" }}
-                    alt="Compressed Image"
-                  />
+                  <div key={index}>
+                    <img
+                      src={URL.createObjectURL(file || originalImages[index])}
+                      style={{ display: "block", maxHeight: "400px", filter: file ? undefined : "brightness(0.3)" }}
+                      alt="Compressed Image"
+                    />
+                    {info && (
+                      <div style={{ fontSize: "12px", color: "#666", marginTop: "5px" }}>
+                        压缩率: {info.rate.toFixed(2)}% | 耗时: {info.time.toFixed(2)}ms
+                        <br />
+                        原始大小: {(info.originalSize / 1024).toFixed(2)}KB | 压缩后:{" "}
+                        {(info.compressedSize / 1024).toFixed(2)}KB
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
