@@ -1,5 +1,19 @@
 # baize-compress-image
 
+## 1.0.0
+
+### Breaking Changes
+
+- 🔄 **返回类型调整**: `compressImageWorker` 和 `compressImagesWorker` 函数现在返回 `CompressBackInfo` 类型，包含压缩信息和文件
+- 📊 **压缩信息增强**: 返回数据现在包含压缩率（rate）、压缩耗时（time）、原始大小（originalSize）、压缩后大小（compressedSize）信息
+
+### Features
+
+- ✨ **压缩统计**: 新增压缩率计算，显示压缩前后文件大小变化百分比
+- ⏱️ **性能监控**: 新增压缩耗时统计，精确到毫秒级别
+- 📏 **文件大小对比**: 新增原始文件大小和压缩后文件大小显示，支持 KB 单位
+- 🎯 **类型安全**: 提供完整的 TypeScript 类型定义支持
+
 ## 0.0.7
 
 修复并发压缩问题
