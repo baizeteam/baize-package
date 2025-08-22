@@ -24,6 +24,8 @@ export interface CompressResult {
   fileName?: string;
   fileType?: string;
   error?: string;
+  startTime?: number;
+  endTime?: number;
 }
 
 interface QueuedTask {
@@ -42,7 +44,7 @@ class WorkerManager {
   private maxWorkers: number;
   private activeWorkers: Set<Worker> = new Set();
 
-  constructor(maxWorkers = 2) {
+  constructor(maxWorkers = 4) {
     this.maxWorkers = maxWorkers;
     this.initializeWorkers();
   }
@@ -52,6 +54,19 @@ class WorkerManager {
       WorkerManager.instance = new WorkerManager();
     }
     return WorkerManager.instance;
+  }
+
+  public setWorkerCount(count: number): void {
+    if (count <= 0) return;
+
+    // 终止现有的 workers
+    this.workers.forEach((worker) => worker.terminate());
+    this.workers = [];
+    this.activeWorkers.clear();
+
+    // 设置新的 worker 数量
+    this.maxWorkers = count;
+    this.initializeWorkers();
   }
 
   private initializeWorkers(): void {
@@ -97,12 +112,16 @@ class WorkerManager {
         this.processNextTask();
       }, 30000); // 30秒超时
 
+      const startTime = Date.now();
+
       const handleMessage = (event: MessageEvent) => {
         clearTimeout(timeoutId);
         worker.removeEventListener("message", handleMessage);
         worker.removeEventListener("error", handleError);
 
         const result = event.data as CompressResult;
+        result.startTime = startTime;
+        result.endTime = Date.now();
         if (result.success) {
           resolve(result);
         } else {
@@ -195,13 +214,22 @@ class WorkerManager {
   }
 }
 
-const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promise<CompressBackInfo> => {
+export interface CompressOptions {
+  quality?: number;
+  workerNum?: number;
+}
+
+const compressImageWorker = async (file: File, options: CompressOptions = {}): Promise<CompressBackInfo> => {
+  const { quality = DEFAULT_QUALITY, workerNum = 4 } = options;
+
   // check
   checkImageType(file);
   checkImageSize(file);
 
   const workerManager = WorkerManager.getInstance();
-  const startTime = performance.now();
+
+  // 设置 worker 数量
+  workerManager.setWorkerCount(workerNum);
 
   try {
     // 将文件转换为 ArrayBuffer 以便传输
@@ -215,9 +243,6 @@ const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promi
       throw new Error(result.error || "压缩失败");
     }
 
-    const endTime = performance.now();
-    const compressTime = endTime - startTime;
-
     // 计算压缩率
     const compressedSize = result.data.byteLength;
     const compressRate = originalSize > 0 ? ((originalSize - compressedSize) / originalSize) * 100 : 0;
@@ -230,7 +255,7 @@ const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promi
     return {
       compressInfo: {
         rate: Math.round(compressRate * 100) / 100, // 保留两位小数
-        time: compressTime,
+        time: (result.endTime as number) - (result.startTime as number),
         originalSize: originalSize,
         compressedSize: compressedSize,
       },
@@ -243,7 +268,7 @@ const compressImageWorker = async (file: File, quality = DEFAULT_QUALITY): Promi
 
 export const compressImagesWorker = async (
   files: File[],
-  quality = DEFAULT_QUALITY,
+  options: CompressOptions = {},
 ): Promise<PromiseSettledResult<CompressBackInfo>[]> => {
   let allSettled: typeof Promise.allSettled;
   // polyfill
@@ -260,7 +285,7 @@ export const compressImagesWorker = async (
     // https://stackoverflow.com/questions/48399756/calling-promise-all-throws-promise-all-called-on-non-object
     allSettled = Promise.allSettled.bind(Promise);
   }
-  return await allSettled(files.map((file) => compressImageWorker(file, quality)));
+  return await allSettled(files.map((file) => compressImageWorker(file, options)));
 };
 
 export const cancelAllCompressWorker = () => {

@@ -28,7 +28,10 @@ function App() {
       const originalImages = Array.from(files);
       setOriginalImages(originalImages);
 
-      const compressionResults = await compressImagesWorker(originalImages, 0.5);
+      const compressionResults = await compressImagesWorker(originalImages, {
+        quality: 0.5,
+        workerNum: 8,
+      });
 
       const compressedImages = compressionResults.map((res) => {
         if (res.status === "rejected") {

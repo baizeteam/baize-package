@@ -1,5 +1,9 @@
 # baize-compress-image
 
+## 1.0.1
+
+- 调整传入参数
+
 ## 1.0.0
 
 ### Breaking Changes
