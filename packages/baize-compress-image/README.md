@@ -17,7 +17,7 @@ pnpm install baize-compress-image
 
 ```typescript
 import ReactDOM from "react-dom/client";
-import { compressImagesWorker, CompressBackInfo, CompressOptions } from "baize-compress-image";
+import { ImageCompressor, CompressBackInfo, CompressOptions } from "baize-compress-image";
 
 function App() {
   const handleMultipleFileChange = async (e: any) => {
@@ -26,10 +26,15 @@ function App() {
     // 配置压缩选项
     const options: CompressOptions = {
       quality: 0.8, // 压缩质量 (0-1)
-      workerNum: 4, // 工作线程数量，默认4
     };
 
-    const results = await compressImagesWorker(files, options);
+    // 通过类创建实例，并在创建时设定 worker 数量，默认为4
+    const compressor = new ImageCompressor({
+      workerNum: 8,
+    });
+    const compressionResults = await compressor.compressImagesWorker(originalImages, {
+      quality: 0.5,
+    });
 
     results.forEach((result, index) => {
       if (result.status === "fulfilled") {
@@ -60,7 +65,7 @@ ReactDOM.createRoot(document.getElementById("app")!).render(<App />);
 
 ```vue
 <script setup lang="ts">
-import { compressImagesWorker, CompressBackInfo, CompressOptions } from "baize-compress-image";
+import { ImageCompressor, CompressBackInfo, CompressOptions } from "baize-compress-image";
 
 const handleMultipleFileChange = async (e: any) => {
   const files = Array.from(e.target.files) as File[];
@@ -68,10 +73,15 @@ const handleMultipleFileChange = async (e: any) => {
   // 配置压缩选项
   const options: CompressOptions = {
     quality: 0.8, // 压缩质量 (0-1)
-    workerNum: 4, // 工作线程数量，默认4
   };
 
-  const results = await compressImagesWorker(files, options);
+  // 通过类创建实例，并在创建时设定 worker 数量，默认为4
+  const compressor = new ImageCompressor({
+    workerNum: 8,
+  });
+  const compressionResults = await compressor.compressImagesWorker(originalImages, {
+    quality: 0.5,
+  });
 
   results.forEach((result, index) => {
     if (result.status === "fulfilled") {
@@ -98,12 +108,11 @@ const handleMultipleFileChange = async (e: any) => {
 
 ## API 说明
 
-### CompressOptions
+### CompressOptions（类方式）
 
 压缩选项配置：
 
 - `quality`: 压缩质量，范围 0-1，默认值 0.8
-- `workerNum`: 工作线程数量，默认值 4
 
 ### CompressBackInfo
 

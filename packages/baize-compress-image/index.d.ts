@@ -10,7 +10,6 @@ export interface CompressBackInfo {
 
 export interface CompressOptions {
   quality?: number;
-  workerNum?: number;
 }
 
 export function compressImagesWorker(
@@ -18,3 +17,9 @@ export function compressImagesWorker(
   options?: CompressOptions,
 ): Promise<PromiseSettledResult<CompressBackInfo>[]>;
 export function cancelAllCompressWorker(): void;
+
+export class ImageCompressor {
+  private constructor(workerNum?: number);
+  compressImagesWorker(files: File[], options?: CompressOptions): Promise<PromiseSettledResult<CompressBackInfo>[]>;
+  cancelAll(): void;
+}

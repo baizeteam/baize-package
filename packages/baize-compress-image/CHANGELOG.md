@@ -1,8 +1,14 @@
 # baize-compress-image
 
+## 2.0.0
+
+- 重构，支持多实例，更容易管理
+
 ## 1.0.1
 
-- 调整传入参数
+- 新增 `ImageCompressor` 类并支持通过 `getInstance(workerNum)` 创建单例、初始化时设定 worker 数量
+- 移除 `CompressOptions.workerNum`，请在创建单例时传入 worker 数量
+- 保留函数式 API：`compressImagesWorker`、`cancelAllCompressWorker` 仍可用（不再支持 `workerNum`）
 
 ## 1.0.0
 
