@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import { ACCEPT_IMG_TYPES } from "../lib/config";
-import { compressImagesWorker } from "../lib/main";
+import { ImageCompressor } from "../lib/main";
 
 function App() {
   const [originalImages, setOriginalImages] = useState<File[]>([]);
@@ -28,9 +28,11 @@ function App() {
       const originalImages = Array.from(files);
       setOriginalImages(originalImages);
 
-      const compressionResults = await compressImagesWorker(originalImages, {
-        quality: 0.5,
+      const compressor = new ImageCompressor({
         workerNum: 8,
+      });
+      const compressionResults = await compressor.compressImagesWorker(originalImages, {
+        quality: 0.5,
       });
 
       const compressedImages = compressionResults.map((res) => {

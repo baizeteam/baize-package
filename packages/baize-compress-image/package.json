@@ -1,6 +1,6 @@
 {
   "name": "baize-compress-image",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "type": "module",
   "keywords": [
     "compress",
@@ -9,7 +9,9 @@
     "image-compression",
     "jpeg",
     "png",
-    "webp"
+    "webp",
+    "OffscreenCanvas",
+    "upng-js"
   ],
   "files": [
     "dist",
