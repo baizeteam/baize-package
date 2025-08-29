@@ -13,7 +13,7 @@ export interface CompressOptions {
 }
 
 export class ImageCompressor {
-  private constructor(params: { workerNum?: number });
+  constructor(params: { workerNum?: number });
   compressImagesWorker(files: File[], options?: CompressOptions): Promise<PromiseSettledResult<CompressBackInfo>[]>;
   cancelAll(): void;
 }
