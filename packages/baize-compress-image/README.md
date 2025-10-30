@@ -17,22 +17,17 @@ pnpm install baize-compress-image
 
 ```typescript
 import ReactDOM from "react-dom/client";
-import { ImageCompressor, CompressBackInfo, CompressOptions } from "baize-compress-image";
+import { ImageCompressor } from "baize-compress-image";
 
 function App() {
   const handleMultipleFileChange = async (e: any) => {
     const files = Array.from(e.target.files);
 
-    // 配置压缩选项
-    const options: CompressOptions = {
-      quality: 0.8, // 压缩质量 (0-1)
-    };
-
     // 通过类创建实例，并在创建时设定 worker 数量，默认为4
     const compressor = new ImageCompressor({
       workerNum: 8,
     });
-    const compressionResults = await compressor.compressImagesWorker(originalImages, {
+    const compressionResults = await compressor.compressImagesWorker(files, {
       quality: 0.5,
     });
 
@@ -65,25 +60,20 @@ ReactDOM.createRoot(document.getElementById("app")!).render(<App />);
 
 ```vue
 <script setup lang="ts">
-import { ImageCompressor, CompressBackInfo, CompressOptions } from "baize-compress-image";
+import { ImageCompressor } from "baize-compress-image";
 
 const handleMultipleFileChange = async (e: any) => {
   const files = Array.from(e.target.files) as File[];
-
-  // 配置压缩选项
-  const options: CompressOptions = {
-    quality: 0.8, // 压缩质量 (0-1)
-  };
 
   // 通过类创建实例，并在创建时设定 worker 数量，默认为4
   const compressor = new ImageCompressor({
     workerNum: 8,
   });
-  const compressionResults = await compressor.compressImagesWorker(originalImages, {
+  const compressionResults = await compressor.compressImagesWorker(files, {
     quality: 0.5,
   });
 
-  results.forEach((result, index) => {
+  compressionResults.forEach((result, index) => {
     if (result.status === "fulfilled") {
       const { compressInfo, file } = result.value;
       console.log(`图片 ${index + 1}:`);
