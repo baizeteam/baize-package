@@ -1,6 +1,6 @@
 {
   "name": "baize-compress-image",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "type": "module",
   "keywords": [
     "compress",
@@ -17,6 +17,11 @@
     "dist",
     "index.d.ts"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/baizeteam/baize-package",
+    "directory": "packages/baize-compress-image"
+  },
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
   "types": "./index.d.ts",
