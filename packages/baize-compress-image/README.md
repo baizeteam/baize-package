@@ -1,6 +1,6 @@
 # baize-compress-image
 
-对图片进行压缩的工具，它通过 web worker、离屏 canvas 等方式对图片进行压缩，加快压缩的效率。
+这是一个支持 jpg、jpeg、png、webp 等图片进行压缩的库，它通过 web worker、离屏 canvas 等方式对图片进行压缩，加快压缩的效率。
 并且支持多 worker 批量压缩多个图片，不会影响主线程的渲染，有效提升用户体验。
 
 ## 开始
@@ -31,7 +31,7 @@ function App() {
       quality: 0.5,
     });
 
-    results.forEach((result, index) => {
+    compressionResults.forEach((result, index) => {
       if (result.status === "fulfilled") {
         const { compressInfo, file } = result.value;
         console.log(`图片 ${index + 1}:`);
