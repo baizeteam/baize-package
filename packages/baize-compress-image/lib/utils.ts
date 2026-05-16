@@ -19,6 +19,10 @@ export const isWebp = (file: File) => {
   return file.type === "image/webp";
 };
 
+export const isSvg = (file: File) => {
+  return file.type === "image/svg+xml";
+};
+
 export const checkImageSize = (file: File) => {
   // 检查图片大小
   if (file.size > MAX_IMG_SIZE) {

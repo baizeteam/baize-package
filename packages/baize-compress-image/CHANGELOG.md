@@ -1,5 +1,11 @@
 # baize-compress-image
 
+## 2.1.0
+
+### Minor Changes
+
+- 添加 svg 压缩
+
 ## 2.0.2
 
 - 修复类型异常问题
