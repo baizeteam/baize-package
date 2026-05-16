@@ -73,7 +73,7 @@ function App() {
             flex: 1,
           }}
         >
-          <label htmlFor="image_uploads">Choose images to upload (PNG, JPG)</label>
+          <label htmlFor="image_uploads">Choose images to upload (PNG, JPG, SVG)</label>
           <input
             accept={ACCEPT_IMG_TYPES.join(",")}
             type="file"

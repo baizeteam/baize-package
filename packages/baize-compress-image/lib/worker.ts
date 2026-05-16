@@ -1,6 +1,7 @@
 // worker.ts
 import UPNG from "upng-js";
-import { isJpeg, isPng, isWebp } from "./utils";
+import { optimize } from "svgo/browser";
+import { isJpeg, isPng, isSvg, isWebp } from "./utils";
 
 export interface CompressResult {
   success: boolean;
@@ -40,6 +41,22 @@ const compressPngImage = async ({ arrayBuffer, fileName, fileType, quality }: Co
   return compressFile;
 };
 
+// 利用svgo压缩svg图片
+const compressSvgImage = async ({ arrayBuffer, fileName, fileType, quality }: CompressParamsType): Promise<File> => {
+  const svgString = new TextDecoder().decode(arrayBuffer);
+  // quality 0-1 映射到 svgo 的精度 1-10（quality 越低精度越高，压缩越激进）
+  const floatPrecision = Math.max(1, Math.round(quality * 10));
+  const result = optimize(svgString, {
+    floatPrecision,
+    plugins: [
+      "preset-default",
+      "removeDimensions",
+    ],
+  });
+  const compressedData = new TextEncoder().encode(result.data);
+  return new File([compressedData], fileName, { type: fileType });
+};
+
 const compressImage = async (
   arrayBuffer: ArrayBuffer,
   fileName: string,
@@ -60,6 +77,8 @@ const compressImage = async (
       compressedFile = await compressJpegImage(params);
     } else if (isPng({ type: fileType } as File)) {
       compressedFile = await compressPngImage(params);
+    } else if (isSvg({ type: fileType } as File)) {
+      compressedFile = await compressSvgImage(params);
     } else {
       throw new Error("Unsupported image type");
     }
