@@ -1,10 +1,10 @@
-import type { CompressPlugin, CompressResult } from "./types";
+import type { CompressPlugin, CompressPluginConfig, CompressResult } from "./types";
 
 interface QueuedTask {
   arrayBuffer: ArrayBuffer;
   fileName: string;
   fileType: string;
-  quality: number;
+  config: CompressPluginConfig;
   resolve: (value: CompressResult) => void;
   reject: (reason: any) => void;
 }
@@ -41,14 +41,12 @@ export class WorkerManager {
   private processNextTask(): void {
     if (this.taskQueue.length === 0) return;
 
-    // Find the first task that has an available worker
     for (let i = 0; i < this.taskQueue.length; i++) {
       const task = this.taskQueue[i];
       const pool = this.getPoolForFileType(task.fileType);
       if (!pool) continue;
 
       if (pool.workers.length < this.maxWorkersPerPlugin) {
-        // Pool not full, create a new worker
         const worker = pool.plugin.createWorker();
         pool.workers.push(worker);
         this.taskQueue.splice(i, 1);
@@ -128,7 +126,7 @@ export class WorkerManager {
           arrayBuffer: task.arrayBuffer,
           fileName: task.fileName,
           fileType: task.fileType,
-          quality: task.quality,
+          ...task.config,
         },
         [task.arrayBuffer],
       );
@@ -139,14 +137,12 @@ export class WorkerManager {
     arrayBuffer: ArrayBuffer,
     fileName: string,
     fileType: string,
-    quality: number,
   ): Promise<CompressResult> {
     const pool = this.getPoolForFileType(fileType);
     if (!pool) {
       throw new Error(`Unsupported image type: ${fileType}`);
     }
 
-    // Initialize pool workers on first use (lazy)
     if (pool.workers.length === 0) {
       this.fillPool(pool);
     }
@@ -158,7 +154,7 @@ export class WorkerManager {
         arrayBuffer,
         fileName,
         fileType,
-        quality,
+        config: pool.plugin.defaultConfig,
         resolve: () => {},
         reject: () => {},
       };
@@ -173,7 +169,7 @@ export class WorkerManager {
           arrayBuffer,
           fileName,
           fileType,
-          quality,
+          config: pool.plugin.defaultConfig,
           resolve,
           reject,
         };

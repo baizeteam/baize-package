@@ -6,17 +6,17 @@ export interface CompressResult {
   error?: string;
 }
 
-export interface CompressParams {
-  arrayBuffer: ArrayBuffer;
-  fileName: string;
-  fileType: string;
-  quality: number;
+export interface CompressPluginConfig {
+  quality?: number;
+  floatPrecision?: number;
+  svgoPlugins?: any[];
 }
 
 export interface CompressPlugin {
   name: string;
   matches: (fileType: string) => boolean;
   createWorker: () => Worker;
+  defaultConfig: CompressPluginConfig;
 }
 
 export interface CompressBackInfo {
@@ -27,8 +27,4 @@ export interface CompressBackInfo {
     compressedSize: number;
   };
   file: File;
-}
-
-export interface CompressOptions {
-  quality?: number;
 }

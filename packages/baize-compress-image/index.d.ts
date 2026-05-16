@@ -8,28 +8,26 @@ export interface CompressBackInfo {
   file: File;
 }
 
-export interface CompressOptions {
+export interface CompressPluginConfig {
   quality?: number;
+  floatPrecision?: number;
+  svgoPlugins?: any[];
 }
 
 export interface CompressPlugin {
   name: string;
   matches: (fileType: string) => boolean;
   createWorker: () => Worker;
+  defaultConfig: CompressPluginConfig;
 }
 
 export interface ImageCompressorOptions {
   workerNum?: number;
-  plugins?: CompressPlugin[];
+  plugins: CompressPlugin[];
 }
 
 export class ImageCompressor {
-  constructor(params?: ImageCompressorOptions);
-  compressImagesWorker(files: File[], options?: CompressOptions): Promise<PromiseSettledResult<CompressBackInfo>[]>;
+  constructor(params: ImageCompressorOptions);
+  compressImagesWorker(files: File[]): Promise<PromiseSettledResult<CompressBackInfo>[]>;
   cancelAll(): void;
 }
-
-export declare const jpegWebpPlugin: CompressPlugin;
-export declare const pngPlugin: CompressPlugin;
-export declare const svgPlugin: CompressPlugin;
-export declare const defaultPlugins: CompressPlugin[];

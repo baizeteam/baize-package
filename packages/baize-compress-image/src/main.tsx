@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import { ImageCompressor } from "../lib/main";
+import { jpegWebp } from "../lib/plugins/jpeg-webp";
+import { png } from "../lib/plugins/png";
+import { svg } from "../lib/plugins/svg";
 
 const ACCEPT_IMG_TYPES = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
 
@@ -31,10 +34,9 @@ function App() {
 
       const compressor = new ImageCompressor({
         workerNum: 8,
+        plugins: [jpegWebp({ quality: 0.5 }), png(), svg({ floatPrecision: 6 })],
       });
-      const compressionResults = await compressor.compressImagesWorker(originalImages, {
-        quality: 0.5,
-      });
+      const compressionResults = await compressor.compressImagesWorker(originalImages);
 
       const compressedImages = compressionResults.map((res) => {
         if (res.status === "rejected") {

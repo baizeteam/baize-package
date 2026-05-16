@@ -1,22 +1,20 @@
-import { DEFAULT_QUALITY } from "./config.ts";
 import { checkImageSize } from "./utils.ts";
 import { WorkerManager } from "./workerManage.ts";
-import { defaultPlugins } from "./plugins/index.ts";
-import type { CompressPlugin, CompressBackInfo, CompressOptions } from "./types.ts";
+import type { CompressPlugin, CompressBackInfo } from "./types.ts";
 
-export type { CompressPlugin, CompressBackInfo, CompressOptions };
+export type { CompressPlugin, CompressBackInfo, CompressPluginConfig } from "./types.ts";
 
 export interface ImageCompressorOptions {
   workerNum?: number;
-  plugins?: CompressPlugin[];
+  plugins: CompressPlugin[];
 }
 
 export class ImageCompressor {
   private workerManager: WorkerManager;
   private plugins: CompressPlugin[];
 
-  constructor(params: ImageCompressorOptions = {}) {
-    this.plugins = params.plugins || defaultPlugins;
+  constructor(params: ImageCompressorOptions) {
+    this.plugins = params.plugins;
     this.workerManager = new WorkerManager(this.plugins, params.workerNum || 4);
   }
 
@@ -26,16 +24,14 @@ export class ImageCompressor {
     }
   }
 
-  private compressImage = async (file: File, options: CompressOptions = {}): Promise<CompressBackInfo> => {
-    const { quality = DEFAULT_QUALITY } = options;
-
+  private compressImage = async (file: File): Promise<CompressBackInfo> => {
     this.checkImageType(file);
     checkImageSize(file);
 
     const arrayBuffer = await file.arrayBuffer();
     const originalSize = arrayBuffer.byteLength;
 
-    const result = await this.workerManager.executeTask(arrayBuffer, file.name, file.type, quality);
+    const result = await this.workerManager.executeTask(arrayBuffer, file.name, file.type);
 
     if (!result.success || !result.data) {
       throw new Error(result.error || "压缩失败");
@@ -61,7 +57,6 @@ export class ImageCompressor {
 
   public compressImagesWorker = async (
     files: File[],
-    options: CompressOptions,
   ): Promise<PromiseSettledResult<CompressBackInfo>[]> => {
     let allSettled: typeof Promise.allSettled;
     if (!Promise.allSettled) {
@@ -74,7 +69,7 @@ export class ImageCompressor {
     } else {
       allSettled = Promise.allSettled.bind(Promise);
     }
-    return await allSettled(files.map((file) => this.compressImage(file, options)));
+    return await allSettled(files.map((file) => this.compressImage(file)));
   };
 
   public cancelAll(): void {

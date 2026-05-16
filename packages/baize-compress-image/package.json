@@ -17,7 +17,8 @@
   ],
   "files": [
     "dist",
-    "index.d.ts"
+    "index.d.ts",
+    "plugins"
   ],
   "repository": {
     "type": "git",
@@ -32,15 +33,15 @@
       "import": "./dist/index.js"
     },
     "./plugins/jpeg-webp": {
-      "types": "./index.d.ts",
+      "types": "./plugins/jpeg-webp.d.ts",
       "import": "./dist/plugins/jpeg-webp.js"
     },
     "./plugins/png": {
-      "types": "./index.d.ts",
+      "types": "./plugins/png.d.ts",
       "import": "./dist/plugins/png.js"
     },
     "./plugins/svg": {
-      "types": "./index.d.ts",
+      "types": "./plugins/svg.d.ts",
       "import": "./dist/plugins/svg.js"
     }
   },
