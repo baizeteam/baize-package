@@ -1,28 +1,4 @@
-import CompressWorker from "./worker.ts?worker&inline";
-export interface CompressBackInfo {
-  compressInfo: {
-    rate: number;
-    time: number;
-    originalSize: number;
-    compressedSize: number;
-  };
-  file: File;
-}
-
-export interface TaskType {
-  file: File;
-  quality: number;
-}
-
-export interface CompressResult {
-  success: boolean;
-  data?: ArrayBuffer;
-  fileName?: string;
-  fileType?: string;
-  error?: string;
-  startTime?: number;
-  endTime?: number;
-}
+import type { CompressPlugin, CompressResult } from "./types";
 
 interface QueuedTask {
   arrayBuffer: ArrayBuffer;
@@ -34,58 +10,90 @@ interface QueuedTask {
 }
 
 export class WorkerManager {
-  private workers: Worker[] = [];
+  private pluginPools: Map<string, { plugin: CompressPlugin; workers: Worker[]; active: Set<Worker> }> = new Map();
   private taskQueue: QueuedTask[] = [];
-  private maxWorkers: number;
-  private activeWorkers: Set<Worker> = new Set();
+  private maxWorkersPerPlugin: number;
 
-  constructor(maxWorkers = 4) {
-    this.maxWorkers = maxWorkers;
-    this.initializeWorkers();
-  }
-
-  private initializeWorkers(): void {
-    for (let i = 0; i < this.maxWorkers; i++) {
-      const worker = new CompressWorker();
-      this.workers.push(worker);
+  constructor(plugins: CompressPlugin[], maxWorkersPerPlugin = 4) {
+    this.maxWorkersPerPlugin = maxWorkersPerPlugin;
+    for (const plugin of plugins) {
+      this.pluginPools.set(plugin.name, { plugin, workers: [], active: new Set() });
     }
   }
 
-  private getAvailableWorker(): Worker | null {
-    return this.workers.find((worker) => !this.activeWorkers.has(worker)) || null;
+  private getPoolForFileType(fileType: string) {
+    for (const pool of this.pluginPools.values()) {
+      if (pool.plugin.matches(fileType)) return pool;
+    }
+    return null;
+  }
+
+  private getAvailableWorker(pool: { workers: Worker[]; active: Set<Worker> }): Worker | null {
+    return pool.workers.find((w) => !pool.active.has(w)) || null;
+  }
+
+  private fillPool(pool: { plugin: CompressPlugin; workers: Worker[] }): void {
+    while (pool.workers.length < this.maxWorkersPerPlugin) {
+      pool.workers.push(pool.plugin.createWorker());
+    }
   }
 
   private processNextTask(): void {
     if (this.taskQueue.length === 0) return;
 
-    const availableWorker = this.getAvailableWorker();
-    if (!availableWorker) return;
+    // Find the first task that has an available worker
+    for (let i = 0; i < this.taskQueue.length; i++) {
+      const task = this.taskQueue[i];
+      const pool = this.getPoolForFileType(task.fileType);
+      if (!pool) continue;
 
-    const task = this.taskQueue.shift()!;
-    this.executeTaskWithWorker(availableWorker, task);
+      if (pool.workers.length < this.maxWorkersPerPlugin) {
+        // Pool not full, create a new worker
+        const worker = pool.plugin.createWorker();
+        pool.workers.push(worker);
+        this.taskQueue.splice(i, 1);
+        this.executeTaskWithWorker(pool, worker, task);
+        return;
+      }
+
+      const availableWorker = this.getAvailableWorker(pool);
+      if (availableWorker) {
+        this.taskQueue.splice(i, 1);
+        this.executeTaskWithWorker(pool, availableWorker, task);
+        return;
+      }
+    }
   }
 
-  private async executeTaskWithWorker(worker: Worker, task: QueuedTask): Promise<void> {
-    this.activeWorkers.add(worker);
+  private async executeTaskWithWorker(
+    pool: { active: Set<Worker> },
+    worker: Worker,
+    task: QueuedTask,
+  ): Promise<void> {
+    pool.active.add(worker);
 
     try {
-      const result = await this.runWorkerTask(worker, task);
+      const result = await this.runWorkerTask(pool, worker, task);
       task.resolve(result);
     } catch (error) {
       task.reject(error);
     } finally {
-      this.activeWorkers.delete(worker);
-      this.processNextTask(); // 处理队列中的下一个任务
+      pool.active.delete(worker);
+      this.processNextTask();
     }
   }
 
-  private runWorkerTask(worker: Worker, task: QueuedTask): Promise<CompressResult> {
+  private runWorkerTask(
+    pool: { active: Set<Worker> },
+    worker: Worker,
+    task: QueuedTask,
+  ): Promise<CompressResult> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error("Worker timeout"));
-        this.activeWorkers.delete(worker);
+        pool.active.delete(worker);
         this.processNextTask();
-      }, 30000); // 30秒超时
+      }, 30000);
 
       const startTime = Date.now();
 
@@ -95,8 +103,8 @@ export class WorkerManager {
         worker.removeEventListener("error", handleError);
 
         const result = event.data as CompressResult;
-        result.startTime = startTime;
-        result.endTime = Date.now();
+        (result as any).startTime = startTime;
+        (result as any).endTime = Date.now();
         if (result.success) {
           resolve(result);
         } else {
@@ -114,7 +122,6 @@ export class WorkerManager {
       worker.addEventListener("message", handleMessage);
       worker.addEventListener("error", handleError);
 
-      // 发送数据到 worker
       worker.postMessage(
         {
           type: "compressImage",
@@ -123,7 +130,7 @@ export class WorkerManager {
           fileType: task.fileType,
           quality: task.quality,
         },
-        [task.arrayBuffer], // 使用 Transferable Objects
+        [task.arrayBuffer],
       );
     });
   }
@@ -134,7 +141,17 @@ export class WorkerManager {
     fileType: string,
     quality: number,
   ): Promise<CompressResult> {
-    const availableWorker = this.getAvailableWorker();
+    const pool = this.getPoolForFileType(fileType);
+    if (!pool) {
+      throw new Error(`Unsupported image type: ${fileType}`);
+    }
+
+    // Initialize pool workers on first use (lazy)
+    if (pool.workers.length === 0) {
+      this.fillPool(pool);
+    }
+
+    const availableWorker = this.getAvailableWorker(pool);
 
     if (availableWorker) {
       const task: QueuedTask = {
@@ -148,7 +165,7 @@ export class WorkerManager {
       return new Promise((resolve, reject) => {
         task.resolve = resolve;
         task.reject = reject;
-        this.executeTaskWithWorker(availableWorker, task);
+        this.executeTaskWithWorker(pool, availableWorker, task);
       });
     } else {
       return new Promise((resolve, reject) => {
@@ -165,26 +182,16 @@ export class WorkerManager {
     }
   }
 
-  public getQueueLength(): number {
-    return this.taskQueue.length;
-  }
-
-  public getActiveWorkerCount(): number {
-    return this.activeWorkers.size;
-  }
-
   public terminate(): void {
-    // 清空任务队列
     this.taskQueue.forEach((task) => {
       task.reject(new Error("Worker manager terminated"));
     });
     this.taskQueue = [];
 
-    // 终止所有 worker
-    this.workers.forEach((worker) => {
-      worker.terminate();
-    });
-    this.workers = [];
-    this.activeWorkers.clear();
+    for (const pool of this.pluginPools.values()) {
+      pool.workers.forEach((w) => w.terminate());
+      pool.workers = [];
+      pool.active.clear();
+    }
   }
 }

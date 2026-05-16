@@ -1,30 +1,6 @@
-import { ACCEPT_IMG_TYPES, MAX_IMG_SIZE } from "./config";
-
-export const checkImageType = (file: File) => {
-  // 检查图片类型,根据 ACCEPT_IMG_TYPES 判断
-  if (!ACCEPT_IMG_TYPES.includes(file.type)) {
-    throw new Error("Unsupported image type");
-  }
-};
-
-export const isPng = (file: File) => {
-  return file.type === "image/png";
-};
-
-export const isJpeg = (file: File) => {
-  return file.type === "image/jpeg";
-};
-
-export const isWebp = (file: File) => {
-  return file.type === "image/webp";
-};
-
-export const isSvg = (file: File) => {
-  return file.type === "image/svg+xml";
-};
+import { MAX_IMG_SIZE } from "./config";
 
 export const checkImageSize = (file: File) => {
-  // 检查图片大小
   if (file.size > MAX_IMG_SIZE) {
     throw new Error("Image size is too large");
   }

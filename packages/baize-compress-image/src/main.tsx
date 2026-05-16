@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
-import { ACCEPT_IMG_TYPES } from "../lib/config";
 import { ImageCompressor } from "../lib/main";
+
+const ACCEPT_IMG_TYPES = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
 
 function App() {
   const [originalImages, setOriginalImages] = useState<File[]>([]);
