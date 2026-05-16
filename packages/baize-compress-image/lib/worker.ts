@@ -48,10 +48,7 @@ const compressSvgImage = async ({ arrayBuffer, fileName, fileType, quality }: Co
   const floatPrecision = Math.max(1, Math.round(quality * 10));
   const result = optimize(svgString, {
     floatPrecision,
-    plugins: [
-      "preset-default",
-      "removeDimensions",
-    ],
+    plugins: ["preset-default", "removeDimensions"],
   });
   const compressedData = new TextEncoder().encode(result.data);
   return new File([compressedData], fileName, { type: fileType });
