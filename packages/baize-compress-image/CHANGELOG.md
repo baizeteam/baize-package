@@ -1,5 +1,11 @@
 # baize-compress-image
 
+## 2.1.1
+
+### Patch Changes
+
+- 修复打包异常问题
+
 ## 2.1.0
 
 ### Minor Changes
