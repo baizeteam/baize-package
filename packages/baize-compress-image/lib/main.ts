@@ -8,6 +8,7 @@ export type {
   CompressPluginConfig,
   CompressPayload,
   CompressResult,
+  CompressFunc,
 } from "./types.ts";
 
 export interface ImageCompressorOptions {

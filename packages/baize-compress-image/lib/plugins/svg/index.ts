@@ -1,6 +1,5 @@
 import type { CompressPlugin, CompressPluginConfig } from "../../types";
-
-export { compress } from "./compress";
+import { compress } from "./compress";
 
 export interface SvgConfig extends CompressPluginConfig {
   floatPrecision?: number;
@@ -13,6 +12,7 @@ export function svg(config?: SvgConfig): CompressPlugin {
   return {
     name: "svg",
     matches: (fileType: string) => fileType === "image/svg+xml",
+    func: compress,
     moduleUrl: import.meta.url,
     defaultConfig: {
       floatPrecision: config?.floatPrecision ?? 8,

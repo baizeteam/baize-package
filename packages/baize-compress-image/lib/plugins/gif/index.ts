@@ -1,6 +1,5 @@
 import type { CompressPlugin, CompressPluginConfig } from "../../types";
-
-export { compress } from "./compress";
+import { compress } from "./compress";
 
 export interface GifConfig extends CompressPluginConfig {
   optimize?: 1 | 2 | 3;
@@ -11,6 +10,7 @@ export function gif(config?: GifConfig): CompressPlugin {
   return {
     name: "gif",
     matches: (fileType: string) => fileType === "image/gif",
+    func: compress,
     moduleUrl: import.meta.url,
     defaultConfig: {
       quality: config?.quality ?? 0.75,

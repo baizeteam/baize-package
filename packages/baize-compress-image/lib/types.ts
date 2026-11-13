@@ -25,10 +25,14 @@ export interface CompressPayload {
   [key: string]: any;
 }
 
+export type CompressFunc = (payload: CompressPayload) => Promise<CompressResult>;
+
 export interface CompressPlugin {
   name: string;
   matches: (fileType: string) => boolean;
-  /** 导出 compress 的 ES 模块地址。共用 worker 会加载这个模块 */
+  /** 压缩函数，放在本模块里即可，文件名不限 */
+  func: CompressFunc;
+  /** 定义了该插件的模块地址，一般为 import.meta.url。worker 加载后调用 func */
   moduleUrl: string;
   defaultConfig: CompressPluginConfig;
 }

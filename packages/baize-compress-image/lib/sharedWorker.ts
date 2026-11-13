@@ -1,27 +1,36 @@
 import type { CompressResult } from "./types";
 
-interface CompressModule {
-  compress: (payload: Record<string, unknown>) => Promise<CompressResult>;
+type CompressFunc = (payload: Record<string, unknown>) => Promise<CompressResult>;
+
+const funcs = new Map<string, Promise<CompressFunc>>();
+
+function resolveFunc(mod: Record<string, unknown>): CompressFunc {
+  if (typeof mod.func === "function") return mod.func as CompressFunc;
+
+  for (const value of Object.values(mod)) {
+    if (typeof value !== "function") continue;
+    try {
+      const plugin = (value as () => { func?: unknown })();
+      if (typeof plugin?.func === "function") return plugin.func as CompressFunc;
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error("插件模块缺少 func");
 }
 
-const modules = new Map<string, Promise<CompressModule>>();
-
-function loadModule(moduleUrl: string): Promise<CompressModule> {
-  const cached = modules.get(moduleUrl);
+function loadFunc(moduleUrl: string): Promise<CompressFunc> {
+  const cached = funcs.get(moduleUrl);
   if (cached) return cached;
 
   const pending = import(/* @vite-ignore */ moduleUrl)
-    .then((mod: CompressModule) => {
-      if (typeof mod.compress !== "function") {
-        throw new Error("插件模块缺少 compress");
-      }
-      return mod;
-    })
+    .then((mod) => resolveFunc(mod as Record<string, unknown>))
     .catch((error: unknown) => {
-      modules.delete(moduleUrl);
+      funcs.delete(moduleUrl);
       throw error;
     });
-  modules.set(moduleUrl, pending);
+  funcs.set(moduleUrl, pending);
   return pending;
 }
 
@@ -34,8 +43,8 @@ self.addEventListener("message", async (event: MessageEvent) => {
     if (typeof moduleUrl !== "string" || !moduleUrl) {
       throw new Error("插件缺少 moduleUrl");
     }
-    const mod = await loadModule(moduleUrl);
-    const result = await mod.compress(payload);
+    const func = await loadFunc(moduleUrl);
+    const result = await func(payload);
     self.postMessage(result);
   } catch (error) {
     self.postMessage({

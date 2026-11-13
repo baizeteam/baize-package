@@ -117,19 +117,36 @@ gif({
 
 ## 自定义插件
 
-`workerNum` 是全部插件共用的线程数。比如设成 4，不管注册了几种格式，都只有 4 个 worker。空闲的会复用，都在忙就排队。插件不用自己开线程，只要匹配文件类型，并提供一个带 `compress` 的模块。
+`workerNum` 是全部插件共用的线程数。比如设成 4，不管注册了几种格式，都只有 4 个 worker。空闲的会复用，都在忙就排队。插件不用自己开线程，只要匹配文件类型，并用 `func` 指定压缩函数。
 
 多个插件都能匹配同一个类型时，使用先注册的那个。`name` 不要和已注册插件重复。
 
-把插件工厂和 `compress` 放在同一个文件里，`moduleUrl` 用这个文件的 `import.meta.url`。共用 worker 会加载该模块并调用 `compress`。这个文件会被 worker 再执行一次，不要在里面启动页面。
+`func` 写在插件同一个模块里即可，文件名不限。`moduleUrl` 用这个模块的 `import.meta.url`。共用 worker 会加载该模块，拿到插件上的 `func` 再调用。这个文件会被 worker 再执行一次，不要在里面启动页面。
 
 ```typescript
 import type { CompressPayload, CompressPlugin, CompressResult } from "baize-compress-image";
+
+async function compressAvif({
+  arrayBuffer,
+  fileName,
+  fileType,
+  quality,
+  colors,
+}: CompressPayload): Promise<CompressResult> {
+  const compressed = await encodeAvif(arrayBuffer, { quality, colors });
+  const data = compressed.byteLength < arrayBuffer.byteLength ? compressed : arrayBuffer;
+  return { success: true, data, fileName, fileType };
+}
+
+async function encodeAvif(buffer: ArrayBuffer, _options: { quality: number; colors: number }) {
+  return buffer;
+}
 
 export function myFormat(config?: { quality?: number; colors?: number }): CompressPlugin {
   return {
     name: "my-format",
     matches: (fileType) => fileType === "image/avif",
+    func: compressAvif,
     moduleUrl: import.meta.url,
     defaultConfig: {
       quality: config?.quality ?? 0.8,
@@ -137,32 +154,17 @@ export function myFormat(config?: { quality?: number; colors?: number }): Compre
     },
   };
 }
-
-export async function compress({
-  arrayBuffer,
-  fileName,
-  fileType,
-  quality,
-  colors,
-}: CompressPayload): Promise<CompressResult> {
-  const compressed = await compressAvif(arrayBuffer, { quality, colors });
-  const data = compressed.byteLength < arrayBuffer.byteLength ? compressed : arrayBuffer;
-  return { success: true, data, fileName, fileType };
-}
-
-async function compressAvif(buffer: ArrayBuffer, _options: { quality: number; colors: number }) {
-  return buffer;
-}
 ```
 
 | 字段            | 说明                                                          |
 | --------------- | ------------------------------------------------------------- |
 | `name`          | 插件名称                                                      |
 | `matches`       | 返回 `true` 的文件会进这个插件                                |
-| `moduleUrl`     | 导出了 `compress` 的模块地址                                  |
-| `defaultConfig` | 默认参数，会和文件数据一起传给 `compress`                     |
+| `func`          | 压缩函数                                                      |
+| `moduleUrl`     | 定义该插件的模块地址，worker 用来加载并调用 `func`            |
+| `defaultConfig` | 默认参数，会和文件数据一起传给 `func`                         |
 
-`compress` 收到的参数包含 `arrayBuffer`、`fileName`、`fileType`，以及 `defaultConfig` 里的字段。返回 `{ success: true, data, fileName, fileType }`。`data` 是压缩后的 `ArrayBuffer`。压缩后没有变小时，把原始 `arrayBuffer` 原样返回。抛错会当成这一张失败。单次任务超过 30 秒会超时。
+`func` 收到的参数包含 `arrayBuffer`、`fileName`、`fileType`，以及 `defaultConfig` 里的字段。返回 `{ success: true, data, fileName, fileType }`。`data` 是压缩后的 `ArrayBuffer`。压缩后没有变小时，把原始 `arrayBuffer` 原样返回。抛错会当成这一张失败。单次任务超过 30 秒会超时。
 
 ```typescript
 const compressor = new ImageCompressor({
