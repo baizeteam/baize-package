@@ -1,6 +1,6 @@
 {
   "name": "baize-compress-image",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "type": "module",
   "keywords": [
     "compress",
@@ -11,7 +11,9 @@
     "png",
     "webp",
     "svg",
+    "gif",
     "svgo",
+    "gifsicle",
     "OffscreenCanvas",
     "upng-js"
   ],
@@ -43,6 +45,10 @@
     "./plugins/svg": {
       "types": "./plugins/svg.d.ts",
       "import": "./dist/plugins/svg.js"
+    },
+    "./plugins/gif": {
+      "types": "./plugins/gif.d.ts",
+      "import": "./dist/plugins/gif.js"
     }
   },
   "scripts": {
@@ -56,6 +62,7 @@
     "@types/upng-js": "^2.1.5",
     "@vitejs/plugin-react": "^4.3.1",
     "cross-env": "^7.0.3",
+    "gifsicle-wasm-browser": "^1.5.19",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rollup-plugin-node-externals": "^7.1.2",

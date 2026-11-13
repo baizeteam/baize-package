@@ -2,7 +2,13 @@ import { checkImageSize } from "./utils.ts";
 import { WorkerManager } from "./workerManage.ts";
 import type { CompressPlugin, CompressBackInfo } from "./types.ts";
 
-export type { CompressPlugin, CompressBackInfo, CompressPluginConfig } from "./types.ts";
+export type {
+  CompressPlugin,
+  CompressBackInfo,
+  CompressPluginConfig,
+  CompressPayload,
+  CompressResult,
+} from "./types.ts";
 
 export interface ImageCompressorOptions {
   workerNum?: number;

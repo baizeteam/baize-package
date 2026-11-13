@@ -1,104 +1,99 @@
+import SharedWorker from "./sharedWorker.ts?worker";
 import type { CompressPlugin, CompressPluginConfig, CompressResult } from "./types";
 
 interface QueuedTask {
   arrayBuffer: ArrayBuffer;
   fileName: string;
   fileType: string;
+  moduleUrl: string;
   config: CompressPluginConfig;
   resolve: (value: CompressResult) => void;
   reject: (reason: any) => void;
 }
 
 export class WorkerManager {
-  private pluginPools: Map<string, { plugin: CompressPlugin; workers: Worker[]; active: Set<Worker> }> = new Map();
+  private plugins: CompressPlugin[];
+  private workers: Worker[] = [];
+  private active = new Set<Worker>();
   private taskQueue: QueuedTask[] = [];
-  private maxWorkersPerPlugin: number;
+  private maxWorkers: number;
 
-  constructor(plugins: CompressPlugin[], maxWorkersPerPlugin = 4) {
-    this.maxWorkersPerPlugin = maxWorkersPerPlugin;
-    for (const plugin of plugins) {
-      this.pluginPools.set(plugin.name, { plugin, workers: [], active: new Set() });
+  constructor(plugins: CompressPlugin[], maxWorkers = 4) {
+    this.plugins = plugins;
+    this.maxWorkers = maxWorkers;
+  }
+
+  private findPlugin(fileType: string): CompressPlugin | null {
+    return this.plugins.find((plugin) => plugin.matches(fileType)) ?? null;
+  }
+
+  private ensurePool(): void {
+    while (this.workers.length < this.maxWorkers) {
+      this.workers.push(new SharedWorker());
     }
   }
 
-  private getPoolForFileType(fileType: string) {
-    for (const pool of this.pluginPools.values()) {
-      if (pool.plugin.matches(fileType)) return pool;
-    }
-    return null;
-  }
-
-  private getAvailableWorker(pool: { workers: Worker[]; active: Set<Worker> }): Worker | null {
-    return pool.workers.find((w) => !pool.active.has(w)) || null;
-  }
-
-  private fillPool(pool: { plugin: CompressPlugin; workers: Worker[] }): void {
-    while (pool.workers.length < this.maxWorkersPerPlugin) {
-      pool.workers.push(pool.plugin.createWorker());
+  private replaceWorker(worker: Worker): void {
+    const index = this.workers.indexOf(worker);
+    if (index >= 0) {
+      this.workers[index] = new SharedWorker();
     }
   }
 
   private processNextTask(): void {
     if (this.taskQueue.length === 0) return;
 
-    for (let i = 0; i < this.taskQueue.length; i++) {
-      const task = this.taskQueue[i];
-      const pool = this.getPoolForFileType(task.fileType);
-      if (!pool) continue;
+    const worker = this.workers.find((item) => !this.active.has(item));
+    if (!worker) return;
 
-      if (pool.workers.length < this.maxWorkersPerPlugin) {
-        const worker = pool.plugin.createWorker();
-        pool.workers.push(worker);
-        this.taskQueue.splice(i, 1);
-        this.executeTaskWithWorker(pool, worker, task);
-        return;
-      }
+    const task = this.taskQueue.shift();
+    if (!task) return;
 
-      const availableWorker = this.getAvailableWorker(pool);
-      if (availableWorker) {
-        this.taskQueue.splice(i, 1);
-        this.executeTaskWithWorker(pool, availableWorker, task);
-        return;
-      }
-    }
+    void this.executeTaskWithWorker(worker, task);
+    this.processNextTask();
   }
 
-  private async executeTaskWithWorker(
-    pool: { active: Set<Worker> },
-    worker: Worker,
-    task: QueuedTask,
-  ): Promise<void> {
-    pool.active.add(worker);
+  private async executeTaskWithWorker(worker: Worker, task: QueuedTask): Promise<void> {
+    this.active.add(worker);
 
     try {
-      const result = await this.runWorkerTask(pool, worker, task);
+      const result = await this.runWorkerTask(worker, task);
       task.resolve(result);
     } catch (error) {
       task.reject(error);
     } finally {
-      pool.active.delete(worker);
+      this.active.delete(worker);
       this.processNextTask();
     }
   }
 
-  private runWorkerTask(
-    pool: { active: Set<Worker> },
-    worker: Worker,
-    task: QueuedTask,
-  ): Promise<CompressResult> {
+  private runWorkerTask(worker: Worker, task: QueuedTask): Promise<CompressResult> {
     return new Promise((resolve, reject) => {
+      let settled = false;
+
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        worker.removeEventListener("message", handleMessage);
+        worker.removeEventListener("error", handleError);
+      };
+
       const timeoutId = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        worker.terminate();
+        this.replaceWorker(worker);
+        this.active.delete(worker);
         reject(new Error("Worker timeout"));
-        pool.active.delete(worker);
         this.processNextTask();
       }, 30000);
 
       const startTime = Date.now();
 
       const handleMessage = (event: MessageEvent) => {
-        clearTimeout(timeoutId);
-        worker.removeEventListener("message", handleMessage);
-        worker.removeEventListener("error", handleError);
+        if (settled) return;
+        settled = true;
+        cleanup();
 
         const result = event.data as CompressResult;
         (result as any).startTime = startTime;
@@ -111,9 +106,9 @@ export class WorkerManager {
       };
 
       const handleError = (error: ErrorEvent) => {
-        clearTimeout(timeoutId);
-        worker.removeEventListener("message", handleMessage);
-        worker.removeEventListener("error", handleError);
+        if (settled) return;
+        settled = true;
+        cleanup();
         reject(new Error(`Worker error: ${error.message}`));
       };
 
@@ -123,6 +118,7 @@ export class WorkerManager {
       worker.postMessage(
         {
           type: "compressImage",
+          moduleUrl: task.moduleUrl,
           arrayBuffer: task.arrayBuffer,
           fileName: task.fileName,
           fileType: task.fileType,
@@ -133,49 +129,29 @@ export class WorkerManager {
     });
   }
 
-  public async executeTask(
-    arrayBuffer: ArrayBuffer,
-    fileName: string,
-    fileType: string,
-  ): Promise<CompressResult> {
-    const pool = this.getPoolForFileType(fileType);
-    if (!pool) {
+  public async executeTask(arrayBuffer: ArrayBuffer, fileName: string, fileType: string): Promise<CompressResult> {
+    const plugin = this.findPlugin(fileType);
+    if (!plugin) {
       throw new Error(`Unsupported image type: ${fileType}`);
     }
-
-    if (pool.workers.length === 0) {
-      this.fillPool(pool);
+    if (!plugin.moduleUrl) {
+      throw new Error(`插件 ${plugin.name} 缺少 moduleUrl`);
     }
 
-    const availableWorker = this.getAvailableWorker(pool);
+    this.ensurePool();
 
-    if (availableWorker) {
-      const task: QueuedTask = {
+    return new Promise((resolve, reject) => {
+      this.taskQueue.push({
         arrayBuffer,
         fileName,
         fileType,
-        config: pool.plugin.defaultConfig,
-        resolve: () => {},
-        reject: () => {},
-      };
-      return new Promise((resolve, reject) => {
-        task.resolve = resolve;
-        task.reject = reject;
-        this.executeTaskWithWorker(pool, availableWorker, task);
+        moduleUrl: plugin.moduleUrl,
+        config: plugin.defaultConfig,
+        resolve,
+        reject,
       });
-    } else {
-      return new Promise((resolve, reject) => {
-        const task: QueuedTask = {
-          arrayBuffer,
-          fileName,
-          fileType,
-          config: pool.plugin.defaultConfig,
-          resolve,
-          reject,
-        };
-        this.taskQueue.push(task);
-      });
-    }
+      this.processNextTask();
+    });
   }
 
   public terminate(): void {
@@ -184,10 +160,8 @@ export class WorkerManager {
     });
     this.taskQueue = [];
 
-    for (const pool of this.pluginPools.values()) {
-      pool.workers.forEach((w) => w.terminate());
-      pool.workers = [];
-      pool.active.clear();
-    }
+    this.workers.forEach((worker) => worker.terminate());
+    this.workers = [];
+    this.active.clear();
   }
 }

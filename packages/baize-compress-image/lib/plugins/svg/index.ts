@@ -1,5 +1,6 @@
 import type { CompressPlugin, CompressPluginConfig } from "../../types";
-import SvgWorker from "./worker.ts?worker&inline";
+
+export { compress } from "./compress";
 
 export interface SvgConfig extends CompressPluginConfig {
   floatPrecision?: number;
@@ -12,7 +13,7 @@ export function svg(config?: SvgConfig): CompressPlugin {
   return {
     name: "svg",
     matches: (fileType: string) => fileType === "image/svg+xml",
-    createWorker: () => new SvgWorker(),
+    moduleUrl: import.meta.url,
     defaultConfig: {
       floatPrecision: config?.floatPrecision ?? 8,
       svgoPlugins: config?.svgoPlugins ?? DEFAULT_SVGO_PLUGINS,

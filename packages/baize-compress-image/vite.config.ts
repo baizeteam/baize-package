@@ -11,7 +11,7 @@ const pageConfig: UserConfig = {
     outDir: "dist-page",
   },
   optimizeDeps: {
-    include: ["upng-js", "svgo"],
+    include: ["upng-js", "svgo", "gifsicle-wasm-browser"],
   },
 };
 
@@ -24,6 +24,7 @@ const libConfig: UserConfig = {
         "plugins/jpeg-webp": "./lib/plugins/jpeg-webp/index.ts",
         "plugins/png": "./lib/plugins/png/index.ts",
         "plugins/svg": "./lib/plugins/svg/index.ts",
+        "plugins/gif": "./lib/plugins/gif/index.ts",
       },
       formats: ["es"],
     },
