@@ -11,7 +11,7 @@ export function gif(config?: GifConfig): CompressPlugin {
     name: "gif",
     matches: (fileType: string) => fileType === "image/gif",
     func: compress,
-    moduleUrl: import.meta.url,
+    moduleUrl: config?.moduleUrl ?? import.meta.url,
     defaultConfig: {
       quality: config?.quality ?? 0.75,
       optimize: config?.optimize ?? 1,

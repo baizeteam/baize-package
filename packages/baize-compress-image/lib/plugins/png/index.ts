@@ -6,7 +6,7 @@ export function png(config?: CompressPluginConfig): CompressPlugin {
     name: "png",
     matches: (fileType: string) => fileType === "image/png",
     func: compress,
-    moduleUrl: import.meta.url,
+    moduleUrl: config?.moduleUrl ?? import.meta.url,
     defaultConfig: {
       quality: config?.quality ?? 0.8,
     },

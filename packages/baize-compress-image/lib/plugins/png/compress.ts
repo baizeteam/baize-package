@@ -13,3 +13,5 @@ export async function compress({ arrayBuffer, fileName, fileType, quality }: Com
 
   return { success: true, data: compressedData, fileName, fileType };
 }
+
+export { compress as func };

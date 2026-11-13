@@ -1,5 +1,11 @@
 # baize-compress-image
 
+## 3.0.1
+
+### Patch Changes
+
+- 修复 Next.js / Turbopack 下插件 `moduleUrl` 变成 `file://`，worker 无法加载压缩模块的问题。内置插件支持自行传入 `moduleUrl`。
+
 ## 3.0.0
 
 ### Major Changes

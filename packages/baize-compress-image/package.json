@@ -1,6 +1,6 @@
 {
   "name": "baize-compress-image",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "type": "module",
   "keywords": [
     "compress",
@@ -49,7 +49,11 @@
     "./plugins/gif": {
       "types": "./plugins/gif.d.ts",
       "import": "./dist/plugins/gif.js"
-    }
+    },
+    "./plugins/jpeg-webp-compress.js": "./dist/plugins/jpeg-webp-compress.js",
+    "./plugins/png-compress.js": "./dist/plugins/png-compress.js",
+    "./plugins/svg-compress.js": "./dist/plugins/svg-compress.js",
+    "./plugins/gif-compress.js": "./dist/plugins/gif-compress.js"
   },
   "scripts": {
     "dev": "vite",

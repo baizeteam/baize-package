@@ -13,7 +13,7 @@ export function svg(config?: SvgConfig): CompressPlugin {
     name: "svg",
     matches: (fileType: string) => fileType === "image/svg+xml",
     func: compress,
-    moduleUrl: import.meta.url,
+    moduleUrl: config?.moduleUrl ?? import.meta.url,
     defaultConfig: {
       floatPrecision: config?.floatPrecision ?? 8,
       svgoPlugins: config?.svgoPlugins ?? DEFAULT_SVGO_PLUGINS,

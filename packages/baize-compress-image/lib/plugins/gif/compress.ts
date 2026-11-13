@@ -107,3 +107,5 @@ export async function compress({
 
   return { success: true, data: compressedData, fileName, fileType };
 }
+
+export { compress as func };

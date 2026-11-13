@@ -6,7 +6,7 @@ export function jpegWebp(config?: CompressPluginConfig): CompressPlugin {
     name: "jpeg-webp",
     matches: (fileType: string) => fileType === "image/jpeg" || fileType === "image/webp",
     func: compress,
-    moduleUrl: import.meta.url,
+    moduleUrl: config?.moduleUrl ?? import.meta.url,
     defaultConfig: {
       quality: config?.quality ?? 0.75,
     },

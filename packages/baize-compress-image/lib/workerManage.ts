@@ -137,6 +137,11 @@ export class WorkerManager {
     if (!plugin.moduleUrl) {
       throw new Error(`插件 ${plugin.name} 缺少 moduleUrl`);
     }
+    if (plugin.moduleUrl.startsWith("file:")) {
+      throw new Error(
+        `插件 ${plugin.name} 的 moduleUrl 是本地文件地址，浏览器中的 worker 无法加载。请改成 new URL("./模块.js", import.meta.url).href`,
+      );
+    }
 
     this.ensurePool();
 

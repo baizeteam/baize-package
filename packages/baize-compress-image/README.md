@@ -115,13 +115,36 @@ gif({
 
 大图建议保持 `optimize: 1`。`-O2` / `-O3` 耗时会明显增加，压缩效果通常接近 `-O1`。单次任务超过 30 秒会超时。
 
+每个内置插件都可以传 `moduleUrl`，用来替换 worker 加载压缩模块的地址。不传时使用包内自带的地址。打包器没有改写包内地址、worker 报 `Failed to fetch dynamically imported module` 时，在业务代码里自己填：
+
+```typescript
+import { gif } from "baize-compress-image/plugins/gif";
+
+gif({
+  moduleUrl: new URL("baize-compress-image/plugins/gif-compress.js", import.meta.url).href,
+});
+```
+
+对应文件：
+
+| 插件 | 地址 |
+| --- | --- |
+| `jpegWebp` | `baize-compress-image/plugins/jpeg-webp-compress.js` |
+| `png` | `baize-compress-image/plugins/png-compress.js` |
+| `svg` | `baize-compress-image/plugins/svg-compress.js` |
+| `gif` | `baize-compress-image/plugins/gif-compress.js` |
+
+`new URL` 要写在业务代码里，这样打包器才会把文件发到站点上。也可以填已经部署好的地址，比如 `gif({ moduleUrl: "/vendor/gif-compress.js" })`。
+
 ## 自定义插件
 
 `workerNum` 是全部插件共用的线程数。比如设成 4，不管注册了几种格式，都只有 4 个 worker。空闲的会复用，都在忙就排队。插件不用自己开线程，只要匹配文件类型，并用 `func` 指定压缩函数。
 
 多个插件都能匹配同一个类型时，使用先注册的那个。`name` 不要和已注册插件重复。
 
-`func` 写在插件同一个模块里即可，文件名不限。`moduleUrl` 用这个模块的 `import.meta.url`。共用 worker 会加载该模块，拿到插件上的 `func` 再调用。这个文件会被 worker 再执行一次，不要在里面启动页面。
+`func` 写在插件同一个模块里即可，文件名不限。共用 worker 会按 `moduleUrl` 加载这个模块，再调用其中的 `func`。这个文件会被 worker 再执行一次，不要在里面启动页面。
+
+Vite 里 `moduleUrl` 写 `import.meta.url`。Next.js（Turbopack）和 Webpack 会把裸的 `import.meta.url` 变成 `file://` 地址，浏览器里的 worker 拉不到，压缩会报 `Failed to fetch dynamically imported module`。这时要写成 `new URL("./压缩模块.js", import.meta.url).href`，让打包器把该文件发到站点上。这个文件必须是浏览器能直接 `import()` 的 ESM。
 
 ```typescript
 import type { CompressPayload, CompressPlugin, CompressResult } from "baize-compress-image";
@@ -161,7 +184,7 @@ export function myFormat(config?: { quality?: number; colors?: number }): Compre
 | `name`          | 插件名称                                                      |
 | `matches`       | 返回 `true` 的文件会进这个插件                                |
 | `func`          | 压缩函数                                                      |
-| `moduleUrl`     | 定义该插件的模块地址，worker 用来加载并调用 `func`            |
+| `moduleUrl`     | 压缩模块地址。Vite 用 `import.meta.url`；Next/Webpack 用 `new URL("./文件.js", import.meta.url).href` |
 | `defaultConfig` | 默认参数，会和文件数据一起传给 `func`                         |
 
 `func` 收到的参数包含 `arrayBuffer`、`fileName`、`fileType`，以及 `defaultConfig` 里的字段。返回 `{ success: true, data, fileName, fileType }`。`data` 是压缩后的 `ArrayBuffer`。压缩后没有变小时，把原始 `arrayBuffer` 原样返回。抛错会当成这一张失败。单次任务超过 30 秒会超时。
