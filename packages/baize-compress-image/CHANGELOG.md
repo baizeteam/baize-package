@@ -1,5 +1,11 @@
 # baize-compress-image
 
+## 3.0.0
+
+### Major Changes
+
+- 重构为插件模式。新增基于 gifsicle-wasm-browser 的 gif 压缩插件，`workerNum` 改为全部插件共用的线程数，自定义插件通过 `func` 指定压缩函数并由共用 worker 加载。
+
 ## 2.1.1
 
 ### Patch Changes
