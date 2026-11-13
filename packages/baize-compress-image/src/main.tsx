@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
-import { ACCEPT_IMG_TYPES } from "../lib/config";
 import { ImageCompressor } from "../lib/main";
+import { jpegWebp } from "../lib/plugins/jpeg-webp";
+import { png } from "../lib/plugins/png";
+import { svg } from "../lib/plugins/svg";
+import { gif } from "../lib/plugins/gif";
+
+const ACCEPT_IMG_TYPES = ["image/jpeg", "image/png", "image/webp", "image/svg+xml", "image/gif"];
 
 function App() {
   const [originalImages, setOriginalImages] = useState<File[]>([]);
@@ -30,10 +35,9 @@ function App() {
 
       const compressor = new ImageCompressor({
         workerNum: 8,
+        plugins: [jpegWebp({ quality: 0.5 }), png(), svg({ floatPrecision: 6 }), gif()],
       });
-      const compressionResults = await compressor.compressImagesWorker(originalImages, {
-        quality: 0.5,
-      });
+      const compressionResults = await compressor.compressImagesWorker(originalImages);
 
       const compressedImages = compressionResults.map((res) => {
         if (res.status === "rejected") {
@@ -73,7 +77,7 @@ function App() {
             flex: 1,
           }}
         >
-          <label htmlFor="image_uploads">Choose images to upload (PNG, JPG, SVG)</label>
+          <label htmlFor="image_uploads">Choose images to upload (PNG, JPG, SVG, GIF)</label>
           <input
             accept={ACCEPT_IMG_TYPES.join(",")}
             type="file"
