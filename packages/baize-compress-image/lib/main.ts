@@ -19,6 +19,7 @@ export interface ImageCompressorOptions {
 export class ImageCompressor {
   private workerManager: WorkerManager;
   private plugins: CompressPlugin[];
+  private cancellationGeneration = 0;
 
   constructor(params: ImageCompressorOptions) {
     this.plugins = params.plugins;
@@ -32,10 +33,14 @@ export class ImageCompressor {
   }
 
   private compressImage = async (file: File): Promise<CompressBackInfo> => {
+    const generation = this.cancellationGeneration;
     this.checkImageType(file);
     checkImageSize(file);
 
     const arrayBuffer = await file.arrayBuffer();
+    if (generation !== this.cancellationGeneration) {
+      throw new Error("Worker manager terminated");
+    }
     const originalSize = arrayBuffer.byteLength;
 
     const result = await this.workerManager.executeTask(arrayBuffer, file.name, file.type);
@@ -80,6 +85,7 @@ export class ImageCompressor {
   };
 
   public cancelAll(): void {
+    this.cancellationGeneration++;
     this.workerManager.terminate();
   }
 }

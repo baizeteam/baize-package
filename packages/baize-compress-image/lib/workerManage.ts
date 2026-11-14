@@ -1,4 +1,4 @@
-import SharedWorker from "./sharedWorker.ts?worker";
+import workerUrl from "./pool.worker.ts?worker&url";
 import type { CompressPlugin, CompressPluginConfig, CompressResult } from "./types";
 
 interface QueuedTask {
@@ -13,8 +13,9 @@ interface QueuedTask {
 
 export class WorkerManager {
   private plugins: CompressPlugin[];
-  private workers: Worker[] = [];
+  private workers = new Set<Worker>();
   private active = new Set<Worker>();
+  private runningTasks = new Map<Worker, (error: Error) => void>();
   private taskQueue: QueuedTask[] = [];
   private maxWorkers: number;
 
@@ -27,30 +28,27 @@ export class WorkerManager {
     return this.plugins.find((plugin) => plugin.matches(fileType)) ?? null;
   }
 
-  private ensurePool(): void {
-    while (this.workers.length < this.maxWorkers) {
-      this.workers.push(new SharedWorker());
-    }
-  }
-
-  private replaceWorker(worker: Worker): void {
-    const index = this.workers.indexOf(worker);
-    if (index >= 0) {
-      this.workers[index] = new SharedWorker();
-    }
-  }
-
   private processNextTask(): void {
-    if (this.taskQueue.length === 0) return;
+    while (this.taskQueue.length > 0) {
+      const task = this.taskQueue[0];
+      let worker = [...this.workers].find((item) => !this.active.has(item));
 
-    const worker = this.workers.find((item) => !this.active.has(item));
-    if (!worker) return;
+      if (!worker) {
+        if (this.workers.size >= this.maxWorkers) return;
+        try {
+          // 部分打包器返回站点路径，统一相对页面解析，避免落到 file:// 基地址。
+          worker = new Worker(new URL(workerUrl, globalThis.location.href), { type: "module" });
+          this.workers.add(worker);
+        } catch (error) {
+          this.taskQueue.shift();
+          task.reject(error);
+          continue;
+        }
+      }
 
-    const task = this.taskQueue.shift();
-    if (!task) return;
-
-    void this.executeTaskWithWorker(worker, task);
-    this.processNextTask();
+      this.taskQueue.shift();
+      void this.executeTaskWithWorker(worker, task);
+    }
   }
 
   private async executeTaskWithWorker(worker: Worker, task: QueuedTask): Promise<void> {
@@ -75,6 +73,7 @@ export class WorkerManager {
         clearTimeout(timeoutId);
         worker.removeEventListener("message", handleMessage);
         worker.removeEventListener("error", handleError);
+        this.runningTasks.delete(worker);
       };
 
       const timeoutId = setTimeout(() => {
@@ -82,11 +81,9 @@ export class WorkerManager {
         settled = true;
         cleanup();
         worker.terminate();
-        this.replaceWorker(worker);
-        this.active.delete(worker);
+        this.workers.delete(worker);
         reject(new Error("Worker timeout"));
-        this.processNextTask();
-      }, 30000);
+      }, 30_000);
 
       const startTime = Date.now();
 
@@ -109,23 +106,37 @@ export class WorkerManager {
         if (settled) return;
         settled = true;
         cleanup();
+        worker.terminate();
+        this.workers.delete(worker);
         reject(new Error(`Worker error: ${error.message}`));
       };
 
       worker.addEventListener("message", handleMessage);
       worker.addEventListener("error", handleError);
+      this.runningTasks.set(worker, (error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      });
 
-      worker.postMessage(
-        {
-          type: "compressImage",
-          moduleUrl: task.moduleUrl,
-          arrayBuffer: task.arrayBuffer,
-          fileName: task.fileName,
-          fileType: task.fileType,
-          ...task.config,
-        },
-        [task.arrayBuffer],
-      );
+      try {
+        worker.postMessage(
+          {
+            ...task.config,
+            type: "compress",
+            moduleUrl: task.moduleUrl,
+            arrayBuffer: task.arrayBuffer,
+            fileName: task.fileName,
+            fileType: task.fileType,
+          },
+          [task.arrayBuffer],
+        );
+      } catch (error) {
+        settled = true;
+        cleanup();
+        reject(error);
+      }
     });
   }
 
@@ -134,23 +145,17 @@ export class WorkerManager {
     if (!plugin) {
       throw new Error(`Unsupported image type: ${fileType}`);
     }
-    if (!plugin.moduleUrl) {
-      throw new Error(`插件 ${plugin.name} 缺少 moduleUrl`);
+    if (typeof plugin.moduleUrl !== "string" || !plugin.moduleUrl) {
+      throw new Error(`插件 ${plugin.name} 缺少压缩模块入口`);
     }
-    if (plugin.moduleUrl.startsWith("file:")) {
-      throw new Error(
-        `插件 ${plugin.name} 的 moduleUrl 是本地文件地址，浏览器中的 worker 无法加载。请改成 new URL("./模块.js", import.meta.url).href`,
-      );
-    }
-
-    this.ensurePool();
+    const moduleUrl = new URL(plugin.moduleUrl, globalThis.location.href).href;
 
     return new Promise((resolve, reject) => {
       this.taskQueue.push({
         arrayBuffer,
         fileName,
         fileType,
-        moduleUrl: plugin.moduleUrl,
+        moduleUrl,
         config: plugin.defaultConfig,
         resolve,
         reject,
@@ -165,8 +170,9 @@ export class WorkerManager {
     });
     this.taskQueue = [];
 
+    this.runningTasks.forEach((reject) => reject(new Error("Worker manager terminated")));
     this.workers.forEach((worker) => worker.terminate());
-    this.workers = [];
+    this.workers.clear();
     this.active.clear();
   }
 }
