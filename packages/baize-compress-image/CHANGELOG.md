@@ -1,5 +1,11 @@
 # baize-compress-image
 
+## 3.0.2
+
+### Patch Changes
+
+- 重构压缩模块加载逻辑。Worker 从插件模块入口加载 `compress`，插件对象上的 `func` 不再必需。
+
 ## 3.0.1
 
 ### Patch Changes
